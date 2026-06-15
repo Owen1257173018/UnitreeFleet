@@ -1,0 +1,52 @@
+[project]
+name = "unitree_webrtc_connect"
+version = "2.1.2"
+description = "Connect to the Unitree Go2 and G1 with WebRTC"
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [
+    { name = "legion1581", email = "legion1581@gmail.com" }
+]
+
+dependencies = [
+    "aiortc>=1.9.0",
+    "pycryptodome",
+    "requests",
+    "curl_cffi",
+    "wasmtime",
+    "flask-socketio",
+    "lz4",
+    "numpy",
+    "packaging",
+    "sounddevice",
+    "pyaudio",
+    "pydub",
+    "opencv-python"
+]
+
+[project.scripts]
+unitree-fetch-aes-key = "unitree_webrtc_connect._cli:main"
+
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["unitree_webrtc_connect*"]
+exclude = [
+    "tests",
+    "tests.*",
+    "docs",
+    "docs.*",
+    "examples",
+    "examples.*",
+    "__pycache__",
+    "__pycache__.*",
+    "*.egg-info",
+    "*.egg-info.*",
+]
+
+[tool.setuptools]
+# include data files as listed in MANIFEST.in
+include-package-data = true

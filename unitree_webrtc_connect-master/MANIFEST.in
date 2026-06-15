@@ -1,0 +1,13 @@
+# Include top-level docs
+include README.md
+recursive-include images *.png
+
+# Include package data explicitly (belt-and-suspenders)
+recursive-include unitree_webrtc_connect/lidar *.wasm
+
+# Exclude non-package stuff from sdist
+prune tests
+prune examples
+prune images
+prune docs
+global-exclude __pycache__ *.py[cod] *.so *.dylib *.egg-info

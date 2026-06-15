@@ -1,0 +1,24 @@
+# Unitree 多机器人控制台 — Python 依赖
+# 安装命令：pip install -r requirements.txt
+
+# ── UI 框架 ──
+PyQt6>=6.4.0
+
+# ── unitree_webrtc_connect 依赖（库自身通过 pyproject.toml 声明，
+#    但在开发/打包环境中通常需要单独安装以下包）──
+aiortc>=1.9.0
+pycryptodome
+requests
+curl_cffi
+wasmtime
+flask-socketio
+lz4
+numpy
+packaging
+sounddevice
+pyaudio
+pydub
+opencv-python
+
+# ── Windows 打包（可选）──
+# pyinstaller>=6.0
