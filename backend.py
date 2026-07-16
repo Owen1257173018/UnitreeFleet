@@ -462,6 +462,8 @@ class RobotInfo:
         # Go2 姿态标记：趴下/坐下/站立等姿态指令后置 True，
         # 下次摇杆移动前自动发 RecoveryStand 恢复行走模式
         self.needs_recovery: bool = False
+        # 对讲通话状态：True = 正在双向音频通话
+        self.audio_active: bool = False
 
     @property
     def is_go2(self) -> bool:
@@ -498,6 +500,7 @@ class RobotManager(QObject):
     audio_list_result     = pyqtSignal(str, list)     # robot_id, [{name, uuid}, ...]
     audio_upload_progress = pyqtSignal(str, int, int)  # robot_id, current, total
     audio_upload_done     = pyqtSignal(str, bool, str) # robot_id, ok, msg
+    audio_call_changed    = pyqtSignal(str, bool)      # robot_id, active
 
     # 执行后会脱离行走模式的 sport 指令 api_id 集合。
     # 发送这些指令后，需要在下次摇杆移动前先发 RecoveryStand 恢复行走。
@@ -550,6 +553,10 @@ class RobotManager(QObject):
                                         name="UnitreeAsyncLoop")
         self._thread.start()
 
+        # 对讲桥（懒加载：第一次 start_call 时才真正打开音频设备）
+        self._audio_bridge = None  # type: Optional["AudioBridge"]
+        self._audio_bridge_err: str = ""
+
     # ── 事件循环线程 ──
     def _run_loop(self):
         if sys.platform == "win32":
@@ -574,6 +581,12 @@ class RobotManager(QObject):
 
     def shutdown(self):
         logger.info("RobotManager 关闭，断开所有连接…")
+        # 关掉对讲桥（关闭麦克风/扬声器流 + 各 track）
+        if self._audio_bridge is not None:
+            try:
+                self._audio_bridge.shutdown()
+            except Exception as e:
+                logger.debug("AudioBridge.shutdown 异常：%s", e)
         future = self._submit(self._disconnect_all())
         try:
             future.result(timeout=3.0)   # 最多等 3 秒让断开完成
@@ -631,6 +644,16 @@ class RobotManager(QObject):
         return robot_id
 
     def remove_robot(self, robot_id: str):
+        # 若正在通话，先解注册对讲（在删除之前，因为需要 conn 引用来 removeTrack）
+        pre = self._robots.get(robot_id)
+        if pre and pre.audio_active and self._audio_bridge is not None:
+            try:
+                self._audio_bridge.unregister_call(robot_id)
+            except Exception as e:
+                logger.debug("remove_robot: unregister_call 异常：%s", e)
+            pre.audio_active = False
+            self.audio_call_changed.emit(robot_id, False)
+
         with self._lock:
             robot = self._robots.pop(robot_id, None)
         if robot:
@@ -773,6 +796,107 @@ class RobotManager(QObject):
         """停止 megaphone 音频流。"""
         self._submit(self._stop_stream_audio_async(list(robot_ids)))
 
+    # ── 双向对讲 (WebRTC audio) ──────────────────────────────────
+
+    def _ensure_audio_bridge(self):
+        """懒加载 AudioBridge；返回 (bridge, err_msg)。"""
+        if self._audio_bridge is not None:
+            return self._audio_bridge, ""
+        if self._audio_bridge_err:
+            return None, self._audio_bridge_err
+        try:
+            from audio_bridge import AudioBridge  # 延迟导入，避免启动即失败
+            self._audio_bridge = AudioBridge(self._loop)
+            return self._audio_bridge, ""
+        except Exception as e:
+            msg = f"对讲功能不可用：{e}"
+            self._audio_bridge_err = msg
+            logger.error(msg)
+            return None, msg
+
+    def start_call(self, robot_id: str):
+        """开启该机器人的双向音频通话。仅 Go2 支持（G1 未验证）。
+        UI 层用 audio_call_changed 信号监听状态；错误通过 command_result 报。"""
+        robot = self._robots.get(robot_id)
+        if not robot:
+            return
+        if not robot.is_go2:
+            self.command_result.emit(robot_id, False, "对讲当前仅支持 Go2")
+            return
+        if robot.status != STATUS_CONNECTED or not robot.conn:
+            self.command_result.emit(robot_id, False, "机器人未连接，无法开启对讲")
+            return
+        if robot.audio_active:
+            return
+        bridge, err = self._ensure_audio_bridge()
+        if not bridge:
+            self.command_result.emit(robot_id, False, err)
+            return
+        # 在 asyncio 线程中注册（addTrack 会触发 SDP renegotiation，需要在 loop 上跑）
+        self._submit(self._start_call_async(robot_id))
+
+    def stop_call(self, robot_id: str):
+        robot = self._robots.get(robot_id)
+        if not robot or not robot.audio_active:
+            return
+        self._submit(self._stop_call_async(robot_id))
+
+    def is_call_active(self, robot_id: str) -> bool:
+        r = self._robots.get(robot_id)
+        return bool(r and r.audio_active)
+
+    def stop_all_calls(self):
+        for rid, r in list(self._robots.items()):
+            if r.audio_active:
+                self.stop_call(rid)
+
+    def set_mic_muted(self, muted: bool):
+        b, _ = self._ensure_audio_bridge()
+        if b is not None:
+            b.set_mic_muted(muted)
+
+    def is_mic_muted(self) -> bool:
+        if self._audio_bridge is None:
+            return True
+        return self._audio_bridge.is_mic_muted()
+
+    def set_playback_volume(self, v: float):
+        b, _ = self._ensure_audio_bridge()
+        if b is not None:
+            b.set_playback_volume(v)
+
+    def playback_volume(self) -> float:
+        if self._audio_bridge is None:
+            return 0.6
+        return self._audio_bridge.playback_volume()
+
+    async def _start_call_async(self, robot_id: str):
+        robot = self._robots.get(robot_id)
+        if not robot or not robot.conn:
+            return
+        try:
+            self._audio_bridge.register_call(robot_id, robot.conn)
+        except Exception as e:
+            logger.exception("register_call 失败 [%s]", robot.name)
+            self.command_result.emit(robot_id, False, f"开启对讲失败：{e}")
+            return
+        robot.audio_active = True
+        self._log(f"🎙 [{robot.name}] 开启对讲")
+        self.audio_call_changed.emit(robot_id, True)
+
+    async def _stop_call_async(self, robot_id: str):
+        robot = self._robots.get(robot_id)
+        if not robot:
+            return
+        try:
+            if self._audio_bridge is not None:
+                self._audio_bridge.unregister_call(robot_id)
+        except Exception as e:
+            logger.debug("unregister_call 异常 [%s]：%s", robot.name, e)
+        robot.audio_active = False
+        self._log(f"🎙 [{robot.name}] 结束对讲")
+        self.audio_call_changed.emit(robot_id, False)
+
     def scan_network(self, timeout: float = 3.0):
         self._submit(self._scan_network_async(timeout))
 
@@ -889,6 +1013,14 @@ class RobotManager(QObject):
         if robot:
             robot.status    = STATUS_ERROR
             robot.error_msg = msg
+            # 掉线时若正在通话，主动清理，避免 audio track 悬空
+            if robot.audio_active and self._audio_bridge is not None:
+                try:
+                    self._audio_bridge.unregister_call(robot_id)
+                except Exception as e:
+                    logger.debug("_set_error 中 unregister_call 异常：%s", e)
+                robot.audio_active = False
+                self.audio_call_changed.emit(robot_id, False)
         self.robot_status_changed.emit(robot_id, STATUS_ERROR, msg)
 
     async def _setup_go2_monitoring(self, robot_id: str):

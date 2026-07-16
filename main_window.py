@@ -184,10 +184,13 @@ def _make_status_dot(status: str, size: int = 10) -> QPixmap:
 # ──────────────────────────────────────────────────────────
 class RobotListItemWidget(QWidget):
     reconnectRequested = pyqtSignal(str)   # robot_id
+    callToggled        = pyqtSignal(str, bool)  # robot_id, want_active
 
     def __init__(self, robot: RobotInfo, parent=None):
         super().__init__(parent)
         self._robot_id = robot.id
+        self._is_go2 = robot.is_go2
+        self._call_active = False
         self._build(robot)
 
     def _build(self, robot: RobotInfo):
@@ -243,9 +246,62 @@ class RobotListItemWidget(QWidget):
         self._recon_btn.setVisible(False)
         row.addWidget(self._recon_btn)
 
+        # 通话按钮（仅 Go2；点击切换开/关）
+        self._call_btn = QPushButton("🎙")
+        self._call_btn.setFixedSize(26, 26)
+        self._call_btn.setToolTip("开启对讲")
+        self._call_btn.setCheckable(True)
+        self._call_btn.clicked.connect(self._on_call_clicked)
+        self._apply_call_btn_style(active=False)
+        # 只有 Go2 才显示此按钮；未连接时禁用
+        self._call_btn.setVisible(self._is_go2)
+        self._call_btn.setEnabled(False)
+        row.addWidget(self._call_btn)
+
         self.update_status(robot.status, robot.error_msg or "")
         if robot.battery is not None:
             self.update_battery(robot.battery)
+
+    _CALL_IDLE_STYLE = """
+        QPushButton {
+            background: #2a2a3e; color: #a6adc8;
+            border: 1px solid #45475a; border-radius: 4px;
+            font-size: 14px; padding: 0px;
+        }
+        QPushButton:hover:enabled   { background: #35354f; border-color: #cba6f7; }
+        QPushButton:pressed:enabled { background: #45455f; }
+        QPushButton:disabled        { background: #1e1e2e; color: #45475a;
+                                      border-color: #313244; }
+    """
+    _CALL_ACTIVE_STYLE = """
+        QPushButton {
+            background: #cba6f7; color: #1e1e2e;
+            border: 1px solid #cba6f7; border-radius: 4px;
+            font-size: 14px; font-weight: bold; padding: 0px;
+        }
+        QPushButton:hover { background: #b593ed; }
+    """
+
+    def _apply_call_btn_style(self, active: bool):
+        self._call_btn.setStyleSheet(
+            self._CALL_ACTIVE_STYLE if active else self._CALL_IDLE_STYLE)
+        self._call_btn.setToolTip("结束对讲" if active else "开启对讲")
+
+    def _on_call_clicked(self):
+        # 用户想要的目标状态（按钮 checkable，点了之后 isChecked 是 UI 意愿态）
+        want = self._call_btn.isChecked()
+        # 立刻回滚 UI 状态，等后端确认再刷新（避免 open 失败卡在错的态）
+        self._call_btn.setChecked(self._call_active)
+        self.callToggled.emit(self._robot_id, want)
+
+    def set_call_active(self, active: bool):
+        """由主窗口接收 audio_call_changed 信号后调用，同步 UI 与后端真实态。"""
+        self._call_active = active
+        self._call_btn.setChecked(active)
+        self._apply_call_btn_style(active)
+        # 通话中在名字前面塞一个 🎙 标记，方便一眼看到有哪几台在通话
+        base = self._name_lbl.text().lstrip("🎙 ").strip()
+        self._name_lbl.setText(f"🎙 {base}" if active else base)
 
     def update_status(self, status: str, error_msg: str = ""):
         color = _STATUS_COLOR.get(status, "#6c7086")
@@ -257,6 +313,10 @@ class RobotListItemWidget(QWidget):
         # 错误或断开时显示重连按钮
         is_bad = status in (STATUS_ERROR, STATUS_DISCONNECTED)
         self._recon_btn.setVisible(is_bad)
+        # 通话按钮：只有 Go2 + 已连接才允许点击；进入错误/断开时若 UI 还是 active，
+        # 由主窗口收到 audio_call_changed 信号统一置回 idle，不在这里改状态。
+        if hasattr(self, "_call_btn"):
+            self._call_btn.setEnabled(self._is_go2 and status == STATUS_CONNECTED)
 
     def update_battery(self, pct: int):
         color = "#a6e3a1" if pct > 20 else "#f9e2af" if pct > 10 else "#f38ba8"
@@ -695,6 +755,36 @@ class RobotListPanel(QWidget):
         title.setStyleSheet("color:#cdd6f4; font-weight:bold; font-size:14px;")
         h_row.addWidget(title)
         h_row.addStretch()
+
+        # 全局对讲控制：麦克风静音切换 + 播放音量滑块。默认静音防止啸叫。
+        self._mic_btn = QPushButton("🎤")
+        self._mic_btn.setFixedSize(28, 24)
+        self._mic_btn.setCheckable(True)
+        self._mic_btn.setChecked(True)   # checked=muted
+        self._mic_btn.setToolTip("麦克风：静音（点击开启说话）")
+        self._mic_btn.setStyleSheet("""
+            QPushButton { background:#3d2535; color:#f38ba8;
+                          border:1px solid #7d3545; border-radius:4px;
+                          font-size:13px; padding:0px; }
+            QPushButton:checked { background:#3d2535; color:#f38ba8; }
+            QPushButton:!checked { background:#1e3a2a; color:#a6e3a1;
+                                   border-color:#3a6a4f; }
+            QPushButton:hover { border-color:#89b4fa; }
+        """)
+        self._mic_btn.toggled.connect(self._on_mic_toggled)
+        h_row.addWidget(self._mic_btn)
+
+        vol_lbl = QLabel("🔊")
+        vol_lbl.setStyleSheet("color:#a6adc8; font-size:12px;")
+        h_row.addWidget(vol_lbl)
+        self._vol_slider = QSlider(Qt.Orientation.Horizontal)
+        self._vol_slider.setRange(0, 100)
+        self._vol_slider.setValue(60)
+        self._vol_slider.setFixedWidth(90)
+        self._vol_slider.setToolTip("对讲播放音量")
+        self._vol_slider.valueChanged.connect(self._on_volume_changed)
+        h_row.addWidget(self._vol_slider)
+
         root.addWidget(header)
 
         # 按钮容器：统一用 3 列 QGridLayout，所有按钮等宽填满左栏，
@@ -943,6 +1033,7 @@ class RobotListPanel(QWidget):
         m.robot_battery_updated.connect(self._on_battery_updated)
         m.scan_progress.connect(self._on_scan_progress)
         m.scan_finished.connect(self._on_scan_finished)
+        m.audio_call_changed.connect(self._on_call_state_changed)
 
     def _on_robot_added(self, robot_id: str):
         robot = self._mgr.get_robot(robot_id)
@@ -951,6 +1042,7 @@ class RobotListPanel(QWidget):
         item   = QListWidgetItem()
         widget = RobotListItemWidget(robot)
         widget.reconnectRequested.connect(self._on_item_reconnect)
+        widget.callToggled.connect(self._on_call_toggled)
         item.setSizeHint(QSize(0, 50))
         item.setData(Qt.ItemDataRole.UserRole, robot_id)
         self._list.addItem(item)
@@ -958,6 +1050,27 @@ class RobotListPanel(QWidget):
         self._item_map[robot_id] = item
         self._widget_map[robot_id] = widget
         self._update_sel_all_btn()
+
+    def _on_call_toggled(self, robot_id: str, want_active: bool):
+        if want_active:
+            self._mgr.start_call(robot_id)
+        else:
+            self._mgr.stop_call(robot_id)
+
+    def _on_call_state_changed(self, robot_id: str, active: bool):
+        w = self._widget_map.get(robot_id)
+        if w is not None:
+            w.set_call_active(active)
+
+    def _on_mic_toggled(self, muted: bool):
+        # 按钮 checked=muted（默认静音，按下来释放）
+        self._mgr.set_mic_muted(muted)
+        self._mic_btn.setToolTip(
+            "麦克风：静音（点击开启说话）" if muted
+            else "麦克风：开启（点击静音）")
+
+    def _on_volume_changed(self, val: int):
+        self._mgr.set_playback_volume(val / 100.0)
 
     def _on_order_changed(self):
         """拖拽排序后 Qt 会清掉 setItemWidget，重新绑定所有条目的 widget。

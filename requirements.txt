@@ -1,24 +1,54 @@
-# Unitree 多机器人控制台 — Python 依赖
-# 安装命令：pip install -r requirements.txt
-
-# ── UI 框架 ──
-PyQt6>=6.4.0
-
-# ── unitree_webrtc_connect 依赖（库自身通过 pyproject.toml 声明，
-#    但在开发/打包环境中通常需要单独安装以下包）──
-aiortc>=1.9.0
-pycryptodome
-requests
-curl_cffi
-wasmtime
-flask-socketio
-lz4
-numpy
-packaging
-sounddevice
-pyaudio
-pydub
-opencv-python
-
-# ── Windows 打包（可选）──
-# pyinstaller>=6.0
+aioice==0.10.2
+aiortc==1.14.0
+altgraph==0.17.5
+av==16.1.0
+bidict==0.23.1
+blinker==1.9.0
+certifi==2026.2.25
+cffi==2.0.0
+charset-normalizer==3.4.7
+click==8.3.2
+cryptography==46.0.6
+curl_cffi==0.15.0
+dnspython==2.8.0
+Flask==3.1.3
+Flask-SocketIO==5.6.1
+google-crc32c==1.8.0
+h11==0.16.0
+idna==3.11
+ifaddr==0.2.0
+itsdangerous==2.2.0
+Jinja2==3.1.6
+lz4==4.4.5
+macholib==1.16.4
+markdown-it-py==4.2.0
+MarkupSafe==3.0.3
+mdurl==0.1.2
+numpy==2.2.6
+opencv-python==4.13.0.92
+packaging==26.0
+PyAudio==0.2.14
+pycparser==3.0
+pycryptodome==3.23.0
+pydub==0.25.1
+pyee==13.0.1
+Pygments==2.20.0
+pyinstaller==6.20.0
+pyinstaller-hooks-contrib==2026.4
+pylibsrtp==1.0.0
+pyOpenSSL==26.0.0
+PyQt6==6.11.0
+PyQt6-Qt6==6.11.0
+PyQt6_sip==13.11.1
+python-engineio==4.13.1
+python-socketio==5.16.1
+requests==2.33.1
+rich==15.0.0
+simple-websocket==1.1.0
+sounddevice==0.5.5
+typing_extensions==4.15.0
+unitree_webrtc_connect==2.0.5
+urllib3==2.6.3
+wasmtime==43.0.0
+Werkzeug==3.1.8
+wsproto==1.3.2

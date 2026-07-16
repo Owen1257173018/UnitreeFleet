@@ -3808,3 +3808,731 @@ TypeError: cannot unpack non-iterable int object
 2026-05-22 21:35:40  INFO      [unitree.backend]  ConfigManager 初始化，配置文件：/Users/ouyanywenjie/.unitree_multicontrol/config.json
 2026-05-22 21:35:40  INFO      [unitree.ui]  主窗口初始化完成，日志文件：/Users/ouyanywenjie/Documents/MultiRobot/logs/app.log
 2026-05-22 21:35:40  INFO      [unitree.app]  主窗口已显示
+2026-06-15 10:34:31  INFO      [unitree.backend]  ============================================================
+2026-06-15 10:34:31  INFO      [unitree.backend]  Unitree 多机器人控制台 启动  log→/Users/ouyanywenjie/Documents/MultiRobot/logs/app.log
+2026-06-15 10:34:31  INFO      [unitree.backend]  ============================================================
+2026-06-15 10:34:31  INFO      [unitree.app]  Qt 应用启动  Python=3.10.20 (main, Mar 11 2026, 17:43:48) [Clang 20.1.8 ]  Platform=darwin
+2026-06-15 10:34:31  INFO      [unitree.backend]  加载配置成功，saved_robots=0
+2026-06-15 10:34:31  INFO      [unitree.backend]  ConfigManager 初始化，配置文件：/Users/ouyanywenjie/.unitree_multicontrol/config.json
+2026-06-15 10:34:31  INFO      [unitree.ui]  主窗口初始化完成，日志文件：/Users/ouyanywenjie/Documents/MultiRobot/logs/app.log
+2026-06-15 10:34:31  INFO      [unitree.app]  主窗口已显示
+2026-06-15 10:34:38  INFO      [unitree.ui]  [用户操作] 打开编排编辑器
+2026-06-15 10:34:43  INFO      [unitree.choreo]  手动添加轨道：#1 Go2
+2026-06-15 10:34:44  INFO      [unitree.choreo]  手动添加轨道：#2 Go2
+2026-06-15 10:34:49  INFO      [unitree.choreo]  添加步骤：角色=#2 Go2  动作=▲ 前进 (速度0.6)  时长=3000ms
+2026-06-15 10:34:50  INFO      [unitree.choreo]  添加步骤：角色=#2 Go2  动作=▼ 后退 (速度0.6)  时长=3000ms
+2026-06-15 10:34:53  INFO      [unitree.choreo]  添加步骤：角色=#1 Go2  动作=正常站立  时长=5000ms
+2026-06-15 10:34:54  INFO      [unitree.choreo]  添加步骤：角色=#1 Go2  动作=停止移动  时长=5000ms
+2026-06-15 10:35:05  INFO      [unitree.ui]  应用关闭，断开所有连接
+2026-06-15 10:35:05  INFO      [unitree.backend]  RobotManager 关闭，断开所有连接…
+2026-06-15 10:35:05  INFO      [unitree.app]  应用退出，code=0
+2026-07-13 23:08:43  INFO      [unitree.backend]  ============================================================
+2026-07-13 23:08:43  INFO      [unitree.backend]  Unitree 多机器人控制台 启动  log→/Users/ouyanywenjie/Documents/MultiRobot/logs/app.log
+2026-07-13 23:08:43  INFO      [unitree.backend]  ============================================================
+2026-07-13 23:08:43  INFO      [unitree.app]  Qt 应用启动  Python=3.10.20 (main, Mar 11 2026, 17:43:48) [Clang 20.1.8 ]  Platform=darwin
+2026-07-13 23:08:43  INFO      [unitree.backend]  加载配置成功，saved_robots=0
+2026-07-13 23:08:43  INFO      [unitree.backend]  ConfigManager 初始化，配置文件：/Users/ouyanywenjie/.unitree_multicontrol/config.json
+2026-07-13 23:08:44  INFO      [unitree.ui]  主窗口初始化完成，日志文件：/Users/ouyanywenjie/Documents/MultiRobot/logs/app.log
+2026-07-13 23:08:44  INFO      [unitree.app]  主窗口已显示
+2026-07-13 23:10:02  INFO      [unitree.ui]  [用户操作] 打开编排编辑器
+2026-07-15 14:00:53  INFO      [unitree.ui]  应用关闭，断开所有连接
+2026-07-15 14:00:53  INFO      [unitree.backend]  RobotManager 关闭，断开所有连接…
+2026-07-15 14:00:53  INFO      [unitree.app]  应用退出，code=0
+2026-07-16 10:51:08  INFO      [unitree.backend]  ============================================================
+2026-07-16 10:51:08  INFO      [unitree.backend]  Unitree 多机器人控制台 启动  log→/Users/ouyanywenjie/Documents/MultiRobot/logs/app.log
+2026-07-16 10:51:08  INFO      [unitree.backend]  ============================================================
+2026-07-16 10:51:09  INFO      [unitree.app]  Qt 应用启动  Python=3.10.20 (main, Mar 11 2026, 17:43:48) [Clang 20.1.8 ]  Platform=darwin
+2026-07-16 10:51:09  INFO      [unitree.backend]  加载配置成功，saved_robots=0
+2026-07-16 10:51:09  INFO      [unitree.backend]  ConfigManager 初始化，配置文件：/Users/ouyanywenjie/.unitree_multicontrol/config.json
+2026-07-16 10:51:09  INFO      [unitree.ui]  主窗口初始化完成，日志文件：/Users/ouyanywenjie/Documents/MultiRobot/logs/app.log
+2026-07-16 10:51:09  INFO      [unitree.app]  主窗口已显示
+2026-07-16 10:51:13  INFO      [MultiRobotApp.audio]  麦克风 开启
+2026-07-16 10:51:16  INFO      [unitree.ui]  [用户操作] 点击 IP 手动添加
+2026-07-16 10:53:08  INFO      [unitree.ui]  [用户操作] 确认手动添加：name=1 type=go2 ip=192.168.88.13 sn=None aes=(空)
+2026-07-16 10:53:08  INFO      [unitree.backend]  添加机器人：name=1 type=go2 ip=192.168.88.13 sn=None robot_id=7bd434d2
+2026-07-16 10:53:08  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:53:08  INFO      [root]  Creating offer...
+2026-07-16 10:53:09  ERROR     [root]  Local request failed: 503 Server Error: Service Unavailable for url: http://192.168.88.13:9991/con_notify
+2026-07-16 10:53:09  ERROR     [unitree.backend]  ❌ [1] 配置错误：Failed to receive initial public key response.
+2026-07-16 10:53:16  INFO      [unitree.backend]  [用户操作] 列表重连 [1]
+2026-07-16 10:53:16  INFO      [unitree.backend]  手动重连：1
+2026-07-16 10:53:16  INFO      [unitree.backend]  🔄 [1] 重连中 (1/5)…
+2026-07-16 10:53:16  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:53:17  INFO      [root]  Creating offer...
+2026-07-16 10:53:17  DEBUG     [root]  con_notify response: {"data1":"eg7Mqmsd7Od+EYE9Ib3MYdEKbiMs1S4N8DeIN+OVG/sB0Zs6lVMHlI+Ez61RmSdybeX4JlJBx3KJYt5fCs0aN0iItTyMVYj3Ra6gWYe4uayJ57vMJe7dEKBCGisFNgrITHxXs2JHXBkLpQetYdZsLofoIGRm3P2crTZRSchIecLatTTtl9jszYSwYbuRgUJSlCGpHJr8obweQH0j/0ISqtjdyVU1Y+qBqIWYPYKSrpGGg2ohGskjP5LM8X49ODR+2lCrMPwXv0vlz7LjcL+We51byKJvF/Utpyq5wiD5yVVYZEJ8D1aicGh5YY0IpsjXXMMFtU7nzLZhgIAspG5UQJEEWt9hRhvThhxYrGVi/2LBxnGjL9CTExwCl2UQ6hapPour63N+TRxYlEDIKeizC0vqtBpWLJyESIr16AGI/8sj6rx50Zz9PDRmCPb5xmRBHRL2guvgVp/v7xSqifZjzRkIyEptMPYsfSOQjWxD6M7fs9w3iykK409HgCuNvVWTaPedIADXcOunp5WVhgNNbM97fkroPiicDjc0qanchCzpIM7k1G5lgFZZZu7UR6mZxHF3+90/3p0=","data2":2}
+2026-07-16 10:53:17  DEBUG     [root]  con_ing_73232 response: {"type":"answer","sdp":"v=0\r\no=- 708192560 2 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\na=group:BUNDLE 0 1 2\r\na=msid-semantic: WMS myKvsVideoStream\r\nm=audio 9 UDP/TLS/RTP/SAVPF 96\r\nc=IN IP4 127.0.0.1\r\na=candidate:0 1 udp 2130706431 192.168.88.13 42097 typ host raddr 0.0.0.0 rport 0 generation 0 network-cost 999\r\na=msid:unitreeMediaStream unitreeAudioTrack\r\na=ssrc:2100898708 cname:G+kHHlnntAA9+uAi\r\na=ssrc:2100898708 msid:unitreeMediaStream unitreeAudioTrack\r\na=ssrc:2100898708 mslabel:unitreeMediaStream\r\na=ssrc:2100898708 label:unitreeAudioTrack\r\na=rtcp:9 IN IP4 0.0.0.0\r\na=ice-ufrag:1J1W\r\na=ice-pwd:W8OOIqk1j1eZkabwaMcAczVp\r\na=ice-options:trickle\r\na=fingerprint:sha-256 80:10:1F:86:73:C3:6F:6D:A2:83:14:86:20:03:DA:10:67:21:AC:4F:1D:D9:C3:93:5F:45:00:1F:E5:51:47:6C\r\na=setup:active\r\na=mid:0\r\na=sendrecv\r\na=rtcp-mux\r\na=rtcp-rsize\r\na=rtpmap:96 opus/48000/2\r\na=rtcp-fb:96 nack\r\na=rtcp-fb:96 goog-remb\r\nm=video 9 UDP/TLS/RTP/SAVPF 101\r\nc=IN IP4 127.0.0.1\r\na=candidate:0 1 udp 2130706431 192.168.88.13 42097 typ host raddr 0.0.0.0 rport 0 generation 0 network-cost 999\r\na=msid:unitreeMediaStream unitreeVideoTrack\r\na=ssrc:40185380 cname:G+kHHlnntAA9+uAi\r\na=ssrc:40185380 msid:unitreeMediaStream unitreeVideoTrack\r\na=ssrc:40185380 mslabel:unitreeMediaStream\r\na=ssrc:40185380 label:unitreeVideoTrack\r\na=rtcp:9 IN IP4 0.0.0.0\r\na=ice-ufrag:1J1W\r\na=ice-pwd:W8OOIqk1j1eZkabwaMcAczVp\r\na=ice-options:trickle\r\na=fingerprint:sha-256 80:10:1F:86:73:C3:6F:6D:A2:83:14:86:20:03:DA:10:67:21:AC:4F:1D:D9:C3:93:5F:45:00:1F:E5:51:47:6C\r\na=setup:active\r\na=mid:1\r\na=sendonly\r\na=rtcp-mux\r\na=rtcp-rsize\r\na=rtpmap:101 H264/90000\r\na=fmtp:101 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f\r\na=rtcp-fb:101 nack\r\na=rtcp-fb:101 goog-remb\r\nm=application 9 UDP/DTLS/SCTP webrtc-datachannel\r\nc=IN IP4 127.0.0.1\r\na=candidate:0 1 udp 2130706431 192.168.88.13 42097 typ host raddr 0.0.0.0 rport 0 generation 0 network-cost 999\r\na=rtcp:9 IN IP4 0.0.0.0\r\na=ice-ufrag:1J1W\r\na=ice-pwd:W8OOIqk1j1eZkabwaMcAczVp\r\na=fingerprint:sha-256 80:10:1F:86:73:C3:6F:6D:A2:83:14:86:20:03:DA:10:67:21:AC:4F:1D:D9:C3:93:5F:45:00:1F:E5:51:47:6C\r\na=setup:active\r\na=mid:2\r\na=sctp-port:5000\r\n","id":"STA_localNetwork"}
+2026-07-16 10:53:17  INFO      [root]  Track received: audio
+2026-07-16 10:53:17  INFO      [root]  Track received: video
+2026-07-16 10:53:17  INFO      [root]  Data channel opened
+2026-07-16 10:53:17  INFO      [root]  Validation succeed
+2026-07-16 10:53:18  INFO      [root]  Network status message received.
+2026-07-16 10:53:18  INFO      [unitree.backend]  ✅ [1] 连接成功！  IP=192.168.88.13  type=go2
+2026-07-16 10:53:18  INFO      [unitree.backend]  [1] 已订阅 LOW_STATE
+2026-07-16 10:53:19  INFO      [root]  Heartbeat response received.
+2026-07-16 10:53:21  INFO      [root]  Heartbeat response received.
+2026-07-16 10:53:23  INFO      [root]  Heartbeat response received.
+2026-07-16 10:53:25  INFO      [root]  Heartbeat response received.
+2026-07-16 10:53:26  ERROR     [MultiRobotApp.audio]  打开麦克风失败：Error querying device -1
+2026-07-16 10:53:27  INFO      [MultiRobotApp.audio]  扬声器流已开启：48000 Hz, 2 ch
+2026-07-16 10:53:27  INFO      [MultiRobotApp.audio]  register_call OK：robot_id=7bd434d2，当前活动数=1
+2026-07-16 10:53:27  INFO      [unitree.backend]  🎙 [1] 开启对讲
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Heartbeat response received.
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:27  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:28  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Heartbeat response received.
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:29  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  DEBUG     [MultiRobotApp.audio]  removeTrack 失败 [7bd434d2]：'RTCPeerConnection' object has no attribute 'removeTrack'
+2026-07-16 10:53:30  INFO      [MultiRobotApp.audio]  unregister_call：robot_id=7bd434d2，剩余活动=0
+2026-07-16 10:53:30  INFO      [MultiRobotApp.audio]  音频流已全部关闭
+2026-07-16 10:53:30  INFO      [unitree.backend]  🎙 [1] 结束对讲
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:30  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:31  INFO      [root]  Heartbeat response received.
+2026-07-16 10:53:33  INFO      [root]  Heartbeat response received.
+2026-07-16 10:53:34  ERROR     [MultiRobotApp.audio]  打开麦克风失败：Error querying device -1
+2026-07-16 10:53:34  INFO      [MultiRobotApp.audio]  扬声器流已开启：48000 Hz, 2 ch
+2026-07-16 10:53:34  INFO      [MultiRobotApp.audio]  register_call OK：robot_id=7bd434d2，当前活动数=1
+2026-07-16 10:53:34  INFO      [unitree.backend]  🎙 [1] 开启对讲
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:34  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Heartbeat response received.
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:35  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:36  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Heartbeat response received.
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:37  DEBUG     [MultiRobotApp.audio]  removeTrack 失败 [7bd434d2]：'RTCPeerConnection' object has no attribute 'removeTrack'
+2026-07-16 10:53:37  INFO      [MultiRobotApp.audio]  unregister_call：robot_id=7bd434d2，剩余活动=0
+2026-07-16 10:53:38  INFO      [MultiRobotApp.audio]  音频流已全部关闭
+2026-07-16 10:53:38  INFO      [unitree.backend]  🎙 [1] 结束对讲
+2026-07-16 10:53:38  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:38  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:38  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:38  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:38  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:38  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:38  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:38  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:38  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:38  INFO      [root]  Receiving audio frame
+2026-07-16 10:53:39  INFO      [root]  Heartbeat response received.
+2026-07-16 10:53:39  INFO      [unitree.ui]  应用关闭，断开所有连接
+2026-07-16 10:53:39  INFO      [unitree.backend]  RobotManager 关闭，断开所有连接…
+2026-07-16 10:53:39  INFO      [MultiRobotApp.audio]  音频流已全部关闭
+2026-07-16 10:53:39  DEBUG     [root]  Track audio ended
+2026-07-16 10:53:39  INFO      [root]  Data channel closed
+2026-07-16 10:53:39  DEBUG     [root]  Track video ended
+2026-07-16 10:53:39  INFO      [unitree.app]  应用退出，code=0
+2026-07-16 10:55:35  INFO      [unitree.backend]  ============================================================
+2026-07-16 10:55:35  INFO      [unitree.backend]  Unitree 多机器人控制台 启动  log→/Users/ouyanywenjie/Documents/MultiRobot/logs/app.log
+2026-07-16 10:55:35  INFO      [unitree.backend]  ============================================================
+2026-07-16 10:55:35  INFO      [unitree.app]  Qt 应用启动  Python=3.10.20 (main, Mar 11 2026, 17:43:48) [Clang 20.1.8 ]  Platform=darwin
+2026-07-16 10:55:35  INFO      [unitree.backend]  加载配置成功，saved_robots=0
+2026-07-16 10:55:35  INFO      [unitree.backend]  ConfigManager 初始化，配置文件：/Users/ouyanywenjie/.unitree_multicontrol/config.json
+2026-07-16 10:55:36  INFO      [unitree.ui]  主窗口初始化完成，日志文件：/Users/ouyanywenjie/Documents/MultiRobot/logs/app.log
+2026-07-16 10:55:36  INFO      [unitree.app]  主窗口已显示
+2026-07-16 10:55:37  INFO      [unitree.ui]  [用户操作] 点击 IP 手动添加
+2026-07-16 10:55:53  INFO      [unitree.ui]  [用户操作] 确认手动添加：name=1 type=go2 ip=192.168.88.13 sn=None aes=(空)
+2026-07-16 10:55:53  INFO      [unitree.backend]  添加机器人：name=1 type=go2 ip=192.168.88.13 sn=None robot_id=3eea7362
+2026-07-16 10:55:53  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:55:53  INFO      [root]  Creating offer...
+2026-07-16 10:55:54  DEBUG     [root]  con_notify response: {"data1":"gB1IT8J/AkLPBs/Ezg5EJ/uAHtebH6fYgkP5RHywGl/YGggEnTxDbhJJ3FjBN+wVTzYnQ3Yv/VNQ1gGqxX5rNcfXbfNLt2RePC0/b3aKXTdLPLXRaq6wc/OkWvqUNva8oQJbbiY3SBgjLGVjlVotQh3k2T24poOKHTYvwkIURgFYFAIpFjTdFJHkZLsdrO31FAyegdnkDFL/4zcvaWbAaaUA4M+2pqeYI1YPNGS7zafQUWfpZiqhNfZWQxvK4ZJunnWxeV8hywRHbD4j0QwgvdU6oQv3QgLWSZ2odyPcKv2RlNiY4dqKsMA9X2F6sODClt9TWA7icdYEDDKrJB7l/UX6yz02OW+jCmshIxrYbiUbH2LKPqN4ERjwpDl2WarSkxDdHnoTZgnmD4uAS/w3rgLyklPmYwv/iUQ59A2lxW1UcEVMDVSlPVkegm8pOCQxXslux+HIbSIWeaphMKRfDw6HcPUHDBDeXo1re3hZQWeRK4Q0ZMgGYCQCYU8UYNwLpJO08uP7VW1IQRUxPk9goGD3SYmbBgl3IRqbYMxsWq0m2o9EvfQpCePg3chGpIadZRqBf/BQxPY=","data2":2}
+2026-07-16 10:55:54  DEBUG     [root]  con_ing_44113 response: {"id":"STA_localNetwork","type":"answer","sdp":"reject"}
+2026-07-16 10:55:54  ERROR     [unitree.backend]  ❌ [1] 机器人已被其它客户端占用（手机 APP 等），请断开后重试
+2026-07-16 10:56:01  INFO      [unitree.backend]  [用户操作] 列表重连 [1]
+2026-07-16 10:56:01  INFO      [unitree.backend]  手动重连：1
+2026-07-16 10:56:01  INFO      [unitree.backend]  🔄 [1] 重连中 (1/5)…
+2026-07-16 10:56:01  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:56:01  INFO      [root]  Creating offer...
+2026-07-16 10:56:01  DEBUG     [root]  con_notify response: {"data1":"L8hPr9QFeEbYwvk/UKStBsli3HWHzGB3WyzFlSPTdyo56wY4zt1lJcHpAcwWcJXio90g+MwghQWk23O4fSrGr/HvB8vu4DU7j3ttL/+ZMd9j4YrgBVXjUTYyyLgBslCztam8UiF+W1r/tZoIZFAg/aEaIib2NozWL6e0J1bThoi0ujw/BIFoui/61YYYYDGRUaZhYzRWs+EOidsa3j3Xma5CMqKUVmqnWgsOoWgCqVzVokwfWwbkzw6CR9LDideQ9dCShKqhRh8g7x/RG+bdas6I5Zb6/gCQGAfInGNg4ueQQvVEEth+6ARV0AFhfaELOWi/2oVzoDkuiiWBgYOXbMGcpdCSHlKzBFXsH1PiLLKQslMLijAGkbtVtM+d/N26r6bv7oc+KjtZ+u6bZ+WjxriqdYAPIbwNmlE0PklPi/B1WRF96qjhZ5+EERg5ois2hfg0NliEVk9Plw01fkHBZBmRIQlomvai64O39rWLTFbM/lGkX6qfF7nFIQYY01vXae+LkldYMOHwzKIpF2bLYMe69gMZMsS2xNhFD9Cr6HeEdZ8QiGguhNHhfj5BQN7z10nEYY+GptQ=","data2":2}
+2026-07-16 10:56:01  ERROR     [root]  Local request failed: 429 Client Error: Too Many Requests for url: http://192.168.88.13:9991/con_ing_88351
+2026-07-16 10:56:01  ERROR     [unitree.backend]  ❌ [1] 握手超时，机器人可能掉线：Robot signaling returned no SDP answer. Check that the robot is powered on, the Wi-Fi link is stable, and no other WebRTC client is mid-handshake.
+2026-07-16 10:56:01  WARNING   [unitree.backend]  [1] 重连第 1 次失败: 新建连接失败
+2026-07-16 10:56:02  INFO      [unitree.backend]  [用户操作] 列表重连 [1]
+2026-07-16 10:56:02  INFO      [unitree.backend]  手动重连：1
+2026-07-16 10:56:02  INFO      [unitree.backend]  🔄 [1] 重连中 (1/5)…
+2026-07-16 10:56:02  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:56:02  INFO      [root]  Creating offer...
+2026-07-16 10:56:02  ERROR     [root]  Local request failed: 429 Client Error: Too Many Requests for url: http://192.168.88.13:9991/con_notify
+2026-07-16 10:56:02  ERROR     [unitree.backend]  ❌ [1] 配置错误：Failed to receive initial public key response.
+2026-07-16 10:56:02  WARNING   [unitree.backend]  [1] 重连第 1 次失败: 新建连接失败
+2026-07-16 10:56:03  INFO      [unitree.backend]  [用户操作] 列表重连 [1]
+2026-07-16 10:56:03  INFO      [unitree.backend]  手动重连：1
+2026-07-16 10:56:03  INFO      [unitree.backend]  🔄 [1] 重连中 (1/5)…
+2026-07-16 10:56:03  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:56:03  INFO      [root]  Creating offer...
+2026-07-16 10:56:03  ERROR     [root]  Local request failed: 503 Server Error: Service Unavailable for url: http://192.168.88.13:9991/con_notify
+2026-07-16 10:56:03  ERROR     [unitree.backend]  ❌ [1] 配置错误：Failed to receive initial public key response.
+2026-07-16 10:56:03  WARNING   [unitree.backend]  [1] 重连第 1 次失败: 新建连接失败
+2026-07-16 10:56:04  INFO      [unitree.backend]  [用户操作] 列表重连 [1]
+2026-07-16 10:56:04  INFO      [unitree.backend]  手动重连：1
+2026-07-16 10:56:04  INFO      [unitree.backend]  🔄 [1] 重连中 (1/5)…
+2026-07-16 10:56:04  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:56:04  INFO      [root]  Creating offer...
+2026-07-16 10:56:04  DEBUG     [root]  con_notify response: {"data1":"LiDxyP+4OZy2SRAP8meVJgr/pA+md09voDK/E8dvMVWlRpQ0wC0sllF7ZoQNxaw6JDWhBmHD9JsdfD5F37VxztY4VjVP2jF1NylEg57lcE5rErl1G0PBLZu1GdS2JedcC1fwCyVRmFM8ZvXyLCgtC/JXrnmFP6lRdqgHnY2yb1TXsRbe00uFgT4VGOa6N9sB88Y8f8rZnzZIqLrLyWWqWq7MoIhphVLwtSEcH4v8llH5putnqg4wJRSQpP8qlQYVzZ+ulC3NRwhsGehRNbkjnEgoDKehPBp8I0p/M+sxAm1X/w9F+8kD44llbwFyk2o7FQqqRS0qDDeTbN85iw+Y2eSvLEXTYrsDe333oerwjO1v2W3PMvxMSUHX6D/opgmwwawimQQ7IylJ//tgnUoEq3z1cPrGZHJtwqXOczVqGFvYWNzNupppfzNg6yeCLsFsYzOHuIjUmT+i8AilNOJkBJX8sfOkCU8QgH5p+yz66RYdmo47cA3lt1t9VmxCiW2UfFV3o/oA99tyI4Wj/YBjKddi0wxedeVKVWIB2AFEeyt/G0zBm59ukk6jdvRp7BVp3s6+nGv1jao=","data2":2}
+2026-07-16 10:56:05  DEBUG     [root]  con_ing_57785 response: {"id":"STA_localNetwork","type":"answer","sdp":"reject"}
+2026-07-16 10:56:05  ERROR     [unitree.backend]  ❌ [1] 机器人已被其它客户端占用（手机 APP 等），请断开后重试
+2026-07-16 10:56:05  WARNING   [unitree.backend]  [1] 重连第 1 次失败: 新建连接失败
+2026-07-16 10:56:05  INFO      [unitree.backend]  🔄 [1] 重连中 (2/5)…
+2026-07-16 10:56:05  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:56:05  INFO      [root]  Creating offer...
+2026-07-16 10:56:05  DEBUG     [root]  con_notify response: {"data1":"xOP94zk0/dDEG9homITqrLBTv72jbqw+WDPMgjaPaM56v13O94XTft6lM35jGf5pVaIfGAZGLyxnAT3E7H4qGRy+bNa1tsOQlHUffZ3suzMeuanyz9KwA/aCRMyWnnOq36VIrJuachZlJycPxvfvxZQ1R3Y6bfDKLdkOKUDHrXHxt9VcpRZWYSm0rOoB+Z8Fx/kQyYmSu2FdIEaiB1bILzE0X8cuYJTbslAwNZWHYtWo/ya1vT/z05Ny23f2bf2o6uK+jNKrcEJu2a7McICzW/tEukqwrFneScXIVFV0DQcwDEKf40CYwNpCCwYaYHhUBwKp47gkQD6V+mZhbfGqfzL2HQFija+ASGOxR2S5Isd6sFAEjez3+FK2Uc3/Ecke0JKp3BzwFMXT2gLp4VTcCDFWUiCOJ04n4mAhXkpn+szVn5I/JmUuN9bQ9OKSTPneRxB9dJebi9vICGGuPhfGA2dCUUfevMdwWEDlyVCv20b+DcFpHJVmXgX1wZns/SzY7mNWza/rs/dTZSWBr63E/r5Jzv8G/ErnPMF8hgGsUCpXvISNvvTSLSidC4UX+AiECoG/HnNSN48=","data2":2}
+2026-07-16 10:56:05  ERROR     [root]  Local request failed: 429 Client Error: Too Many Requests for url: http://192.168.88.13:9991/con_ing_60791
+2026-07-16 10:56:05  ERROR     [unitree.backend]  ❌ [1] 握手超时，机器人可能掉线：Robot signaling returned no SDP answer. Check that the robot is powered on, the Wi-Fi link is stable, and no other WebRTC client is mid-handshake.
+2026-07-16 10:56:05  WARNING   [unitree.backend]  [1] 重连第 2 次失败: 新建连接失败
+2026-07-16 10:56:05  INFO      [unitree.backend]  🔄 [1] 重连中 (2/5)…
+2026-07-16 10:56:05  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:56:05  INFO      [root]  Creating offer...
+2026-07-16 10:56:05  ERROR     [root]  Local request failed: 429 Client Error: Too Many Requests for url: http://192.168.88.13:9991/con_notify
+2026-07-16 10:56:05  ERROR     [unitree.backend]  ❌ [1] 配置错误：Failed to receive initial public key response.
+2026-07-16 10:56:05  WARNING   [unitree.backend]  [1] 重连第 2 次失败: 新建连接失败
+2026-07-16 10:56:06  INFO      [unitree.backend]  🔄 [1] 重连中 (2/5)…
+2026-07-16 10:56:06  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:56:06  INFO      [root]  Creating offer...
+2026-07-16 10:56:06  ERROR     [root]  Local request failed: 429 Client Error: Too Many Requests for url: http://192.168.88.13:9991/con_notify
+2026-07-16 10:56:06  ERROR     [unitree.backend]  ❌ [1] 配置错误：Failed to receive initial public key response.
+2026-07-16 10:56:06  WARNING   [unitree.backend]  [1] 重连第 2 次失败: 新建连接失败
+2026-07-16 10:56:07  INFO      [unitree.backend]  [用户操作] 列表重连 [1]
+2026-07-16 10:56:07  INFO      [unitree.backend]  手动重连：1
+2026-07-16 10:56:07  INFO      [unitree.backend]  🔄 [1] 重连中 (1/5)…
+2026-07-16 10:56:07  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:56:07  INFO      [root]  Creating offer...
+2026-07-16 10:56:07  ERROR     [root]  Local request failed: 429 Client Error: Too Many Requests for url: http://192.168.88.13:9991/con_notify
+2026-07-16 10:56:07  ERROR     [unitree.backend]  ❌ [1] 配置错误：Failed to receive initial public key response.
+2026-07-16 10:56:07  WARNING   [unitree.backend]  [1] 重连第 1 次失败: 新建连接失败
+2026-07-16 10:56:08  INFO      [unitree.backend]  🔄 [1] 重连中 (2/5)…
+2026-07-16 10:56:08  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:56:08  INFO      [root]  Creating offer...
+2026-07-16 10:56:08  ERROR     [root]  Local request failed: 429 Client Error: Too Many Requests for url: http://192.168.88.13:9991/con_notify
+2026-07-16 10:56:08  ERROR     [unitree.backend]  ❌ [1] 配置错误：Failed to receive initial public key response.
+2026-07-16 10:56:08  WARNING   [unitree.backend]  [1] 重连第 2 次失败: 新建连接失败
+2026-07-16 10:56:08  INFO      [unitree.backend]  [用户操作] 列表重连 [1]
+2026-07-16 10:56:08  INFO      [unitree.backend]  手动重连：1
+2026-07-16 10:56:08  INFO      [unitree.backend]  🔄 [1] 重连中 (1/5)…
+2026-07-16 10:56:08  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:56:08  INFO      [root]  Creating offer...
+2026-07-16 10:56:08  ERROR     [root]  Local request failed: 429 Client Error: Too Many Requests for url: http://192.168.88.13:9991/con_notify
+2026-07-16 10:56:08  ERROR     [unitree.backend]  ❌ [1] 配置错误：Failed to receive initial public key response.
+2026-07-16 10:56:08  WARNING   [unitree.backend]  [1] 重连第 1 次失败: 新建连接失败
+2026-07-16 10:56:08  INFO      [unitree.backend]  🔄 [1] 重连中 (3/5)…
+2026-07-16 10:56:08  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:56:08  INFO      [unitree.backend]  🔄 [1] 重连中 (3/5)…
+2026-07-16 10:56:08  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:56:08  INFO      [root]  Creating offer...
+2026-07-16 10:56:08  INFO      [root]  Creating offer...
+2026-07-16 10:56:08  ERROR     [root]  Local request failed: 429 Client Error: Too Many Requests for url: http://192.168.88.13:9991/con_notify
+2026-07-16 10:56:09  ERROR     [root]  Local request failed: 429 Client Error: Too Many Requests for url: http://192.168.88.13:9991/con_notify
+2026-07-16 10:56:09  ERROR     [unitree.backend]  ❌ [1] 配置错误：Failed to receive initial public key response.
+2026-07-16 10:56:09  WARNING   [unitree.backend]  [1] 重连第 3 次失败: 新建连接失败
+2026-07-16 10:56:09  ERROR     [unitree.backend]  ❌ [1] 配置错误：Failed to receive initial public key response.
+2026-07-16 10:56:09  WARNING   [unitree.backend]  [1] 重连第 3 次失败: 新建连接失败
+2026-07-16 10:56:09  INFO      [unitree.backend]  🔄 [1] 重连中 (3/5)…
+2026-07-16 10:56:09  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:56:09  INFO      [root]  Creating offer...
+2026-07-16 10:56:09  ERROR     [root]  Local request failed: 429 Client Error: Too Many Requests for url: http://192.168.88.13:9991/con_notify
+2026-07-16 10:56:09  ERROR     [unitree.backend]  ❌ [1] 配置错误：Failed to receive initial public key response.
+2026-07-16 10:56:09  WARNING   [unitree.backend]  [1] 重连第 3 次失败: 新建连接失败
+2026-07-16 10:56:10  INFO      [unitree.backend]  🔄 [1] 重连中 (2/5)…
+2026-07-16 10:56:10  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:56:10  INFO      [root]  Creating offer...
+2026-07-16 10:56:10  ERROR     [root]  Local request failed: 429 Client Error: Too Many Requests for url: http://192.168.88.13:9991/con_notify
+2026-07-16 10:56:10  ERROR     [unitree.backend]  ❌ [1] 配置错误：Failed to receive initial public key response.
+2026-07-16 10:56:10  WARNING   [unitree.backend]  [1] 重连第 2 次失败: 新建连接失败
+2026-07-16 10:56:11  INFO      [unitree.backend]  🔄 [1] 重连中 (3/5)…
+2026-07-16 10:56:11  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:56:11  INFO      [root]  Creating offer...
+2026-07-16 10:56:11  ERROR     [root]  Local request failed: 429 Client Error: Too Many Requests for url: http://192.168.88.13:9991/con_notify
+2026-07-16 10:56:11  ERROR     [unitree.backend]  ❌ [1] 配置错误：Failed to receive initial public key response.
+2026-07-16 10:56:11  WARNING   [unitree.backend]  [1] 重连第 3 次失败: 新建连接失败
+2026-07-16 10:56:11  INFO      [unitree.backend]  🔄 [1] 重连中 (2/5)…
+2026-07-16 10:56:11  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:56:11  INFO      [root]  Creating offer...
+2026-07-16 10:56:11  ERROR     [root]  Local request failed: 429 Client Error: Too Many Requests for url: http://192.168.88.13:9991/con_notify
+2026-07-16 10:56:11  ERROR     [unitree.backend]  ❌ [1] 配置错误：Failed to receive initial public key response.
+2026-07-16 10:56:11  WARNING   [unitree.backend]  [1] 重连第 2 次失败: 新建连接失败
+2026-07-16 10:56:12  INFO      [unitree.backend]  🔄 [1] 重连中 (4/5)…
+2026-07-16 10:56:12  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:56:12  INFO      [unitree.backend]  🔄 [1] 重连中 (4/5)…
+2026-07-16 10:56:12  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:56:12  INFO      [root]  Creating offer...
+2026-07-16 10:56:12  INFO      [root]  Creating offer...
+2026-07-16 10:56:12  ERROR     [root]  Local request failed: 429 Client Error: Too Many Requests for url: http://192.168.88.13:9991/con_notify
+2026-07-16 10:56:12  ERROR     [root]  Local request failed: 429 Client Error: Too Many Requests for url: http://192.168.88.13:9991/con_notify
+2026-07-16 10:56:12  ERROR     [unitree.backend]  ❌ [1] 配置错误：Failed to receive initial public key response.
+2026-07-16 10:56:12  WARNING   [unitree.backend]  [1] 重连第 4 次失败: 新建连接失败
+2026-07-16 10:56:12  ERROR     [unitree.backend]  ❌ [1] 配置错误：Failed to receive initial public key response.
+2026-07-16 10:56:12  WARNING   [unitree.backend]  [1] 重连第 4 次失败: 新建连接失败
+2026-07-16 10:56:12  INFO      [unitree.backend]  🔄 [1] 重连中 (4/5)…
+2026-07-16 10:56:12  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:56:12  INFO      [root]  Creating offer...
+2026-07-16 10:56:12  ERROR     [root]  Local request failed: 429 Client Error: Too Many Requests for url: http://192.168.88.13:9991/con_notify
+2026-07-16 10:56:12  ERROR     [unitree.backend]  ❌ [1] 配置错误：Failed to receive initial public key response.
+2026-07-16 10:56:12  WARNING   [unitree.backend]  [1] 重连第 4 次失败: 新建连接失败
+2026-07-16 10:56:13  INFO      [unitree.backend]  🔄 [1] 重连中 (3/5)…
+2026-07-16 10:56:13  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:56:13  INFO      [root]  Creating offer...
+2026-07-16 10:56:14  ERROR     [root]  Local request failed: 429 Client Error: Too Many Requests for url: http://192.168.88.13:9991/con_notify
+2026-07-16 10:56:14  ERROR     [unitree.backend]  ❌ [1] 配置错误：Failed to receive initial public key response.
+2026-07-16 10:56:14  WARNING   [unitree.backend]  [1] 重连第 3 次失败: 新建连接失败
+2026-07-16 10:56:14  INFO      [unitree.backend]  🔄 [1] 重连中 (4/5)…
+2026-07-16 10:56:14  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:56:14  INFO      [root]  Creating offer...
+2026-07-16 10:56:14  DEBUG     [root]  con_notify response: {"data1":"SBxFbCwk9MIKsxvpnxSq1Hk4UVn1oaP3yYYltGQRHkiWGxoU9bZSPMdxmY+Fj6C2re2azSWw9iJRdppZOmJwwbERM7jBT3caRUMo7t4P48325lmvcsY6Oavy+uxzXLfBXxmDDDEu3pgBeUc7BRGEJ0OFPvjX+eQTA9wmVWfylna1l3gEDhcKPP73MnCvTGVzclVWWf/kjUgfLOaEVq+TBTcEA1Jm5Ta0PiC1onuS5xcxiqOEEAEEffuryFoTSjdbu/gYCdUZ/131iV0aA138OX+NGDDHQ9ocB7fk1+vZQnXauKcILqlZgxhsFCgBA/DDAY0vfOlbIXdCRaZNhKyAFmIzfFbrZvWf2o3cnVhjMIUFFT6ibKg3Cv3afBLUL6UG5tKYi7WV5JfEuONyX3oAryt+FnsdyJCeED2C2ZNcD3nnhY/apK1JcYrmXboem/QURhNAih2Hy95SUY7euJSHryVzDD/qd4CfaC6QNHFFgwTyN84NQ8eBpuMxVUk0BqbzNzBAap69ibsSKOGTe5UDCkAwsMI+YCda9DVKrkd9zblpZ/T165nyX+reyGmQDn/hazN/pjMb3kc=","data2":2}
+2026-07-16 10:56:14  DEBUG     [root]  con_ing_20267 response: {"type":"answer","sdp":"v=0\r\no=- 736729106 2 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\na=group:BUNDLE 0 1 2\r\na=msid-semantic: WMS myKvsVideoStream\r\nm=audio 9 UDP/TLS/RTP/SAVPF 96\r\nc=IN IP4 127.0.0.1\r\na=candidate:0 1 udp 2130706431 192.168.88.13 54175 typ host raddr 0.0.0.0 rport 0 generation 0 network-cost 999\r\na=msid:unitreeMediaStream unitreeAudioTrack\r\na=ssrc:796951217 cname:PpIsgzszxoB9zD5z\r\na=ssrc:796951217 msid:unitreeMediaStream unitreeAudioTrack\r\na=ssrc:796951217 mslabel:unitreeMediaStream\r\na=ssrc:796951217 label:unitreeAudioTrack\r\na=rtcp:9 IN IP4 0.0.0.0\r\na=ice-ufrag:Tth0\r\na=ice-pwd:I+yEEB2x04AiJ5FsmUIrvhvK\r\na=ice-options:trickle\r\na=fingerprint:sha-256 7F:EA:BA:73:B3:34:B1:4F:47:08:69:58:4A:C0:05:D3:AA:FD:6D:2D:89:AC:5E:0F:D6:A4:60:3B:E6:AD:8A:B9\r\na=setup:active\r\na=mid:0\r\na=sendrecv\r\na=rtcp-mux\r\na=rtcp-rsize\r\na=rtpmap:96 opus/48000/2\r\na=rtcp-fb:96 nack\r\na=rtcp-fb:96 goog-remb\r\nm=video 9 UDP/TLS/RTP/SAVPF 101\r\nc=IN IP4 127.0.0.1\r\na=candidate:0 1 udp 2130706431 192.168.88.13 54175 typ host raddr 0.0.0.0 rport 0 generation 0 network-cost 999\r\na=msid:unitreeMediaStream unitreeVideoTrack\r\na=ssrc:303851635 cname:PpIsgzszxoB9zD5z\r\na=ssrc:303851635 msid:unitreeMediaStream unitreeVideoTrack\r\na=ssrc:303851635 mslabel:unitreeMediaStream\r\na=ssrc:303851635 label:unitreeVideoTrack\r\na=rtcp:9 IN IP4 0.0.0.0\r\na=ice-ufrag:Tth0\r\na=ice-pwd:I+yEEB2x04AiJ5FsmUIrvhvK\r\na=ice-options:trickle\r\na=fingerprint:sha-256 7F:EA:BA:73:B3:34:B1:4F:47:08:69:58:4A:C0:05:D3:AA:FD:6D:2D:89:AC:5E:0F:D6:A4:60:3B:E6:AD:8A:B9\r\na=setup:active\r\na=mid:1\r\na=sendonly\r\na=rtcp-mux\r\na=rtcp-rsize\r\na=rtpmap:101 H264/90000\r\na=fmtp:101 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f\r\na=rtcp-fb:101 nack\r\na=rtcp-fb:101 goog-remb\r\nm=application 9 UDP/DTLS/SCTP webrtc-datachannel\r\nc=IN IP4 127.0.0.1\r\na=candidate:0 1 udp 2130706431 192.168.88.13 54175 typ host raddr 0.0.0.0 rport 0 generation 0 network-cost 999\r\na=rtcp:9 IN IP4 0.0.0.0\r\na=ice-ufrag:Tth0\r\na=ice-pwd:I+yEEB2x04AiJ5FsmUIrvhvK\r\na=fingerprint:sha-256 7F:EA:BA:73:B3:34:B1:4F:47:08:69:58:4A:C0:05:D3:AA:FD:6D:2D:89:AC:5E:0F:D6:A4:60:3B:E6:AD:8A:B9\r\na=setup:active\r\na=mid:2\r\na=sctp-port:5000\r\n","id":"STA_localNetwork"}
+2026-07-16 10:56:14  INFO      [unitree.backend]  🔄 [1] 重连中 (3/5)…
+2026-07-16 10:56:14  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:56:14  INFO      [root]  Creating offer...
+2026-07-16 10:56:15  DEBUG     [root]  con_notify response: {"data1":"SwIK4/BxHWNtx3OJNUonxLge/RyIPuzXt69pUVA2Cpd2GIymwq2ILtFha6cYVJ8erAUzs0TRkj3uyZlDvb2klvGY2IAxNOwawCb4sKAT968hmu0EEHGNcBnK3jRkr1Xu4PiwzRKqJpdQbBptYbrWAwWMQtwKk1hVmrKdpUIf+leARu5FFPhQor5ygKJJ+ZrK+P5iDpSzIB8M+lcoT5X01qymjysncRRdeEABomEoW91N29sKHwUSlHN3Fc30ueQFjkfWZI5NsdBFwbuAoWi5AO5/jb10bconTBkFjdayi6OsQoR+oTJZny1Fu2isuMe1XppqZ8iKBgpYn8766txe9HykRf1WuwWZxrCQZeeo3jDJrAR67nknD/tL8ajDcoeyHTN4/9joGr5cSQLkheuYsLlF/azhokDCbDDsJwWghXWJqQYhwdGbgnvv24ZiQxx7LbKBnM7ep1qdXsUsYcQM2RvuWRbjpYDmpqTqJgXe/nWkkiS4uH5cdQZP0k121JoSooZ5d3+5UawbepB3ls1ZQ1tRBAT+ekVhGqdVLAWpn/PsllG20oFo1a5L6CZBMEfjFDzhWD03cUM=","data2":2}
+2026-07-16 10:56:17  INFO      [unitree.ui]  [用户操作] 请求删除：['1']
+2026-07-16 10:56:17  ERROR     [root]  Local request failed: 503 Server Error: Service Unavailable for url: http://192.168.88.13:9991/con_ing_82859
+2026-07-16 10:56:17  INFO      [root]  Track received: audio
+2026-07-16 10:56:17  INFO      [root]  Track received: video
+2026-07-16 10:56:17  ERROR     [unitree.backend]  ❌ [1] 握手超时，机器人可能掉线：Robot signaling returned no SDP answer. Check that the robot is powered on, the Wi-Fi link is stable, and no other WebRTC client is mid-handshake.
+2026-07-16 10:56:17  WARNING   [unitree.backend]  [1] 重连第 3 次失败: 新建连接失败
+2026-07-16 10:56:17  INFO      [unitree.backend]  🔄 [1] 重连中 (5/5)…
+2026-07-16 10:56:17  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:56:17  INFO      [unitree.backend]  🔄 [1] 重连中 (5/5)…
+2026-07-16 10:56:17  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:56:17  INFO      [unitree.backend]  🔄 [1] 重连中 (5/5)…
+2026-07-16 10:56:17  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:56:17  INFO      [unitree.backend]  🔄 [1] 重连中 (4/5)…
+2026-07-16 10:56:17  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:56:17  INFO      [root]  Creating offer...
+2026-07-16 10:56:17  INFO      [root]  Creating offer...
+2026-07-16 10:56:17  INFO      [root]  Creating offer...
+2026-07-16 10:56:17  INFO      [root]  Creating offer...
+2026-07-16 10:56:18  DEBUG     [root]  con_notify response: {"data1":"gq1qtd83xE67pSAyHjUZCC2ajTJ27NoVleREiSJy4WpFu6osNOHAOilqABr6Weh8TxMvt7SgxSi4Xqs/y+BTiyefTWqEPisvvrGlw06+3+8dPMPD9OL7TN7hO9c+Q9RezBxFTS+cAaiPn0XJUPFlsZQCWBeSOfyOsJKOFWEBEsQoBkLV0JVG1bla2Qhd5LiGOz2nRdQ8BGuI4UK/AdkWz8aCNYJ1zUdrTP5QKASMayrLiOKCyln7rKjJKEuLtmFD8vg+2TddIgboe+4QVbO3nU5RfBzpn7Imo0GxiVLHon0DxmBdtlJMmJ5MKxqOafb8eTf3D0XCg40ck6OqJJwbGl42W/Ex59OZEb/xwXrRikleau/etcBnAa6yOMlSXa6Kjrw2a/9PZc39ti2myFdE9uM5o7TT+9rFB360AXuGQUiiieihLAcGQyy0gOeoRkVdTGoHMnL3P5IaZmgoOZcAhzpSqyWGjwFpUWOEgZAu5Tmnu/51Mhr3fV6C94U/0YKhFPmoe4oX+Sf3f66hZ1aN/y0tVUlGilfc2QOL37QoIgea5MKKHsyN7AA2U1Cp/uYVuh7yTJWB7jA=","data2":2}
+2026-07-16 10:56:18  INFO      [unitree.backend]  删除机器人：1 (robot_id=3eea7362)
+2026-07-16 10:56:20  INFO      [unitree.ui]  [用户操作] 点击 IP 手动添加
+2026-07-16 10:56:21  ERROR     [root]  Local request failed: 503 Server Error: Service Unavailable for url: http://192.168.88.13:9991/con_ing_60753
+2026-07-16 10:56:21  DEBUG     [root]  con_notify response: {"data1":"ZCKUxyHsnJgvBotg8slePOFJnPtaPgS6l0MHHLG0nWQb8wRT6Z9nNssv4W7ae1pok7sJn+OgNEuVrmXfmmTKrxtjmeMWx6dGM9Ji5SIK5E5dccbuGR7RMH9n79FxF+MdAXm0YBndyA+iEZov/dbvPN4q/mSteckgLH9N0GL6GVCu0K2UZ3+bxHcXDcYDJbjiJzCycomW1FKxo9PS/uo40p7JW6xNlQWqeoFuNINs6VBCKrI+hyWYQSBDYLRa4u9lCP/DEKaKQ7doVCn9Eor4+YJuKN8maZnCxYz5tmhDAyF0gO7eRddlJMiFYisN1xpQMY29Vy1ZGuKL8HGocqrsMULfRLoYuHP3v20Hw7WCJpTTWewBOEAKEYyohHC0Mon4CQcT+2VjI0cWMdXmjpHieIC8gJ96rFNN4BQhPzSo42taxfv4CbswqMLOWdR6B69eIlgbA1XVDQ0kzzimSRzuVNA5G+JuhXFTVKJTjUxN0DkJTrUIxP6q9+zjIVbLztfUjXUrB5xsyiCK1SYH3CGozmFlAg/Da9HapUA+Gtj6/C+8uOS7M9x38IIN9cnE/3qg+NnBDZnlCYQ=","data2":2}
+2026-07-16 10:56:21  ERROR     [root]  Local request failed: 429 Client Error: Too Many Requests for url: http://192.168.88.13:9991/con_ing_59320
+2026-07-16 10:56:21  ERROR     [root]  Local request failed: 429 Client Error: Too Many Requests for url: http://192.168.88.13:9991/con_notify
+2026-07-16 10:56:21  ERROR     [root]  Local request failed: 429 Client Error: Too Many Requests for url: http://192.168.88.13:9991/con_notify
+2026-07-16 10:56:21  ERROR     [unitree.backend]  ❌ [1] 握手超时，机器人可能掉线：Robot signaling returned no SDP answer. Check that the robot is powered on, the Wi-Fi link is stable, and no other WebRTC client is mid-handshake.
+2026-07-16 10:56:21  WARNING   [unitree.backend]  [1] 重连第 5 次失败: 新建连接失败
+2026-07-16 10:56:21  ERROR     [unitree.backend]  ❌ [1] 握手超时，机器人可能掉线：Robot signaling returned no SDP answer. Check that the robot is powered on, the Wi-Fi link is stable, and no other WebRTC client is mid-handshake.
+2026-07-16 10:56:21  WARNING   [unitree.backend]  [1] 重连第 5 次失败: 新建连接失败
+2026-07-16 10:56:21  ERROR     [unitree.backend]  ❌ [1] 配置错误：Failed to receive initial public key response.
+2026-07-16 10:56:21  WARNING   [unitree.backend]  [1] 重连第 5 次失败: 新建连接失败
+2026-07-16 10:56:21  ERROR     [unitree.backend]  ❌ [1] 配置错误：Failed to receive initial public key response.
+2026-07-16 10:56:21  WARNING   [unitree.backend]  [1] 重连第 4 次失败: 新建连接失败
+2026-07-16 10:56:21  INFO      [root]  Data channel opened
+2026-07-16 10:56:21  INFO      [root]  Validation succeed
+2026-07-16 10:56:22  INFO      [root]  Network status message received.
+2026-07-16 10:56:22  INFO      [unitree.backend]  ✅ [1] 连接成功！  IP=192.168.88.13  type=go2
+2026-07-16 10:56:23  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:24  ERROR     [unitree.backend]  ❌ [1] 重连 5 次均失败，请检查设备是否在线
+2026-07-16 10:56:24  ERROR     [unitree.backend]  ❌ [1] 重连 5 次均失败，请检查设备是否在线
+2026-07-16 10:56:24  ERROR     [unitree.backend]  ❌ [1] 重连 5 次均失败，请检查设备是否在线
+2026-07-16 10:56:25  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:27  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:29  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:30  INFO      [unitree.ui]  [用户操作] 确认手动添加：name=1 type=go2 ip=192.168.88.13 sn=None aes=(空)
+2026-07-16 10:56:30  INFO      [unitree.backend]  添加机器人：name=1 type=go2 ip=192.168.88.13 sn=None robot_id=a91e4365
+2026-07-16 10:56:30  INFO      [unitree.backend]  ⏳ 正在连接 [1] (go2) @ 192.168.88.13…
+2026-07-16 10:56:30  INFO      [root]  Creating offer...
+2026-07-16 10:56:30  DEBUG     [root]  con_notify response: {"data1":"27797QGbyA68xYQauylSR9rmEI3I0xQxWT7bEFR7eOJWEl8qNNBYUQmE8SHoNAC0qA0j71JR/INhlIupM3Sr95ccPpmagKofNd0z05nigsT6LeMavT5EQUhNQ/Y7+jAKYM8FO2QiZFKDUBTptDmjS6ODre6e75Q9mltYwaSvAhU+15cEiFmhaq4NKvXjgT3uN1B9n9k9gmNgenSpwx2svI8PaHsZz5oY/3cVcsccqYsMhnV2sfnHZh7PCJcl3veCodwDGEL96RJOItSrGXrWuNuqM3ZkfWNKV1fpBxEj1L72bx1pVJVhLNvMZAagipplmCRXw7YMT2KCt1zR1r2sfmes5Y0B2dbJbNfiXZwjP/hygKJqxLUdtTOlmLfZ37kO+HNhhZA30helrzJspRW0kvbMeX3P1hbZqEPsLtSaopFi6O0at3yYCpGh3Ywn0dvuOqeZo6LIaHoojaqbOFkpBSM3yQR1LQ994vQQEMB5sQFPJf/hEWhFtWine4t4TOWNLl6WGbgg94fRW0f1QFIoGsXLsWGtCkLrcA9R4j6hmVIaTrJDnm9unFfWVH4cNekgkaU6BiZAW24=","data2":2}
+2026-07-16 10:56:30  DEBUG     [root]  con_ing_35040 response: {"type":"answer","sdp":"v=0\r\no=- 408692893 2 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\na=group:BUNDLE 0 1 2\r\na=msid-semantic: WMS myKvsVideoStream\r\nm=audio 9 UDP/TLS/RTP/SAVPF 96\r\nc=IN IP4 127.0.0.1\r\na=candidate:0 1 udp 2130706431 192.168.88.13 40955 typ host raddr 0.0.0.0 rport 0 generation 0 network-cost 999\r\na=msid:unitreeMediaStream unitreeAudioTrack\r\na=ssrc:497078868 cname:1rsTsLzRxPGTCrjU\r\na=ssrc:497078868 msid:unitreeMediaStream unitreeAudioTrack\r\na=ssrc:497078868 mslabel:unitreeMediaStream\r\na=ssrc:497078868 label:unitreeAudioTrack\r\na=rtcp:9 IN IP4 0.0.0.0\r\na=ice-ufrag:R0VW\r\na=ice-pwd:bbSrYpbGI24prvyueoMNlMoR\r\na=ice-options:trickle\r\na=fingerprint:sha-256 BA:E5:56:F2:BF:7D:27:44:1D:E0:F0:BC:AE:2F:55:EB:0A:98:08:68:DC:A7:12:08:AF:00:93:F2:4F:E8:3C:59\r\na=setup:active\r\na=mid:0\r\na=sendrecv\r\na=rtcp-mux\r\na=rtcp-rsize\r\na=rtpmap:96 opus/48000/2\r\na=rtcp-fb:96 nack\r\na=rtcp-fb:96 goog-remb\r\nm=video 9 UDP/TLS/RTP/SAVPF 101\r\nc=IN IP4 127.0.0.1\r\na=candidate:0 1 udp 2130706431 192.168.88.13 40955 typ host raddr 0.0.0.0 rport 0 generation 0 network-cost 999\r\na=msid:unitreeMediaStream unitreeVideoTrack\r\na=ssrc:649774428 cname:1rsTsLzRxPGTCrjU\r\na=ssrc:649774428 msid:unitreeMediaStream unitreeVideoTrack\r\na=ssrc:649774428 mslabel:unitreeMediaStream\r\na=ssrc:649774428 label:unitreeVideoTrack\r\na=rtcp:9 IN IP4 0.0.0.0\r\na=ice-ufrag:R0VW\r\na=ice-pwd:bbSrYpbGI24prvyueoMNlMoR\r\na=ice-options:trickle\r\na=fingerprint:sha-256 BA:E5:56:F2:BF:7D:27:44:1D:E0:F0:BC:AE:2F:55:EB:0A:98:08:68:DC:A7:12:08:AF:00:93:F2:4F:E8:3C:59\r\na=setup:active\r\na=mid:1\r\na=sendonly\r\na=rtcp-mux\r\na=rtcp-rsize\r\na=rtpmap:101 H264/90000\r\na=fmtp:101 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f\r\na=rtcp-fb:101 nack\r\na=rtcp-fb:101 goog-remb\r\nm=application 9 UDP/DTLS/SCTP webrtc-datachannel\r\nc=IN IP4 127.0.0.1\r\na=candidate:0 1 udp 2130706431 192.168.88.13 40955 typ host raddr 0.0.0.0 rport 0 generation 0 network-cost 999\r\na=rtcp:9 IN IP4 0.0.0.0\r\na=ice-ufrag:R0VW\r\na=ice-pwd:bbSrYpbGI24prvyueoMNlMoR\r\na=fingerprint:sha-256 BA:E5:56:F2:BF:7D:27:44:1D:E0:F0:BC:AE:2F:55:EB:0A:98:08:68:DC:A7:12:08:AF:00:93:F2:4F:E8:3C:59\r\na=setup:active\r\na=mid:2\r\na=sctp-port:5000\r\n","id":"STA_localNetwork"}
+2026-07-16 10:56:30  INFO      [root]  Track received: audio
+2026-07-16 10:56:30  INFO      [root]  Track received: video
+2026-07-16 10:56:31  INFO      [root]  Data channel opened
+2026-07-16 10:56:31  INFO      [root]  Validation succeed
+2026-07-16 10:56:31  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:32  INFO      [root]  Network status message received.
+2026-07-16 10:56:32  INFO      [unitree.backend]  ✅ [1] 连接成功！  IP=192.168.88.13  type=go2
+2026-07-16 10:56:32  INFO      [unitree.backend]  [1] 已订阅 LOW_STATE
+2026-07-16 10:56:33  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:33  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:35  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:35  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:36  INFO      [unitree.backend]  [用户操作] Go2 动作 [趴下(api_id=1005)] | 目标=['a91e4365']
+2026-07-16 10:56:36  INFO      [unitree.backend]  ▶ 发送 [StandDown(api_id=1005)] → 1
+2026-07-16 10:56:36  INFO      [unitree.backend]  [1] 指令 [StandDown] 成功，响应：{'type': 'res', 'topic': 'rt/api/sport/response', 'data': {'header': {'identity': {'api_id': 1005, 'id': 1759168639}, 'status': {'code': 0}}, 'data': ''}}
+2026-07-16 10:56:37  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:37  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:39  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:39  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:41  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:41  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:43  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:43  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:45  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:45  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:47  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:47  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:49  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:49  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:51  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:51  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:53  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:53  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:55  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:55  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:55  INFO      [unitree.ui]  [用户操作] 请求删除：['1']
+2026-07-16 10:56:57  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:57  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:57  INFO      [unitree.backend]  删除机器人：1 (robot_id=a91e4365)
+2026-07-16 10:56:57  DEBUG     [root]  Track audio ended
+2026-07-16 10:56:57  INFO      [root]  Data channel closed
+2026-07-16 10:56:57  DEBUG     [root]  Track video ended
+2026-07-16 10:56:57  INFO      [unitree.backend]  旧连接已释放 [key=192.168.88.13]
+2026-07-16 10:56:59  INFO      [root]  Heartbeat response received.
+2026-07-16 10:56:59  DEBUG     [root]  Track video ended
+2026-07-16 10:56:59  DEBUG     [root]  Track audio ended
+2026-07-16 10:56:59  INFO      [root]  Data channel closed
