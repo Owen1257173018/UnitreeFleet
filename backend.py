@@ -1255,18 +1255,8 @@ class RobotManager(QObject):
                       f"{', '.join(sent_names)}")
 
     async def _emergency_stop_go2_async(self, robot_ids: List[str]):
-        """Go2 急停：零摇杆 + StopMove + Damp（req，priority=1 插队）。安全，无需二次确认。
-
-        之前这里的实现（零摇杆 + StopMove+BalanceStand fire-and-forget → 切
-        MOTION_SWITCHER 到 "normal" → 等 300ms → RecoveryStand）全部是没有
-        抓包验证过的猜测。用 Frida 实测抓过官方 App 点急停的真实报文：在同一秒
-        内连发两条 **req**（不是 fire-and-forget 的 publish_without_callback），
-        StopMove(1003) 和 Damp(1001)，两条都在 header 里带 policy:{priority:1}——
-        跳过排队、立即执行靠的是这个 priority 字段，不是切运动模式，也不是用
-        BalanceStand（那只是保持平衡站姿，不会像 Damp 那样立刻卸掉电机力矩）。
-        参考库的 publish_request_new 本来就支持 priority 参数（见 pub_sub.py），
-        直接传 "priority": 1 就会在 header 里加上 policy。
-        """
+    #Go2 急停：零摇杆 + StopMove + Damp（req，priority=1 插队）。安全，无需二次确认。
+ 
         payload = {"lx": 0.0, "ly": 0.0, "rx": 0.0, "ry": 0.0, "keys": 0}
         names = []
         tasks = []

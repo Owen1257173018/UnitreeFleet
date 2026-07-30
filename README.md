@@ -4,6 +4,8 @@
 
 一个用于**同时控制多台宇树机器人**（Go2 四足、G1 人形）的 PyQt6 桌面应用，通过 WebRTC datachannel 直连，支持 LAN 群控、动作编排和实时录制。
 
+[视频演示](https://www.bilibili.com/video/BV1H33b6mE7S/?vd_source=ea8c547d8c9602db9ea992116d51bc55)
+
 > 🐕🤖 一台电脑、一个界面、N 台机器人。
 
 ![PyQt6](https://img.shields.io/badge/PyQt6-6.4+-blue) ![Python](https://img.shields.io/badge/Python-3.10+-green) ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS-lightgrey) ![License](https://img.shields.io/badge/License-MIT-blue)
