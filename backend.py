@@ -45,6 +45,8 @@ if _LIB_DIR not in sys.path:
 from unitree_webrtc_connect import UnitreeWebRTCConnection, WebRTCConnectionMethod
 from unitree_webrtc_connect.constants import RTC_TOPIC, SPORT_CMD, VUI_COLOR, AUDIO_API, DATA_CHANNEL_TYPE
 
+from i18n import tr as _t
+
 # 新版库的结构化异常（旧版没有，导入失败说明库还是旧的）
 try:
     from unitree_webrtc_connect import (
@@ -84,6 +86,9 @@ class _NoiseFilter(logging.Filter):
         "> message sent:",           # 摇杆/心跳每100ms发一次
         "Received message on data channel:",  # lowstate 完整 JSON
         "电量=",                      # 每次 lowstate 都打
+        "Receiving audio frame",     # 通话时每 20ms 一条，上游库固定 INFO
+        "Heartbeat response received",  # 每 2s 一条
+        "Network status message received",
     )
     # 编排播放期间临时开启 verbose，把摇杆/数据通道收发都打出来用于排查
     _VERBOSE = False
@@ -161,11 +166,36 @@ G1_ARM_ACTIONS = [
 ]
 
 # G1 运动模式
+# 2026-07-27 拿真机抓包实测确认（同一个 api_id=7101, parameter={"data": code}）：
+# 阻尼(1) 是蹲起(706) 的前置条件——必须先进阻尼才能蹲起；蹲起/蹲下是同一个按钮、
+# 同一个 code(706)，机器人自己的状态机根据当前是阻尼还是走跑决定蹲起还是蹲下，
+# 蹲起后会自动（不用再发指令）转成走跑(801)。fsm_id 状态含义对照见下面
+# G1_FSM_LABELS。
+# 锁定站立(4)=Unitree G1 loco 的 StandUp，抓包实测发 {"data":4}：让人形以锁定姿态
+# 站直、待命，是阻尼/趴地后重新站起来的必经状态。走路(500)/走路腰控(501) 实测没什么
+# 用，已从按钮里去掉；移动直接用点击/摇杆。
 G1_MOVE_MODES = [
-    (500, "走路"),
-    (501, "走路(腰控)"),
+    (1, "阻尼"),
+    (4, "锁定站立"),
+    (706, "蹲起/蹲下"),
     (801, "跑步"),
 ]
+
+# rt/lf/sportmodestate 的 fsm_id 字段翻译成人话，抓包实测对照表见上面注释。
+G1_FSM_LABELS = {
+    0: "零力矩",
+    1: "阻尼",
+    4: "锁定站立",
+    500: "走路",
+    501: "走路(腰控)",
+    706: "起蹲切换中…",
+    801: "跑步",
+}
+
+def g1_fsm_label(fsm_id) -> str:
+    if fsm_id is None:
+        return "未知"
+    return G1_FSM_LABELS.get(fsm_id, f"未知({fsm_id})")
 
 # Go2 动作分组
 GO2_ACTIONS: Dict[str, List[tuple]] = {
@@ -372,6 +402,16 @@ class ConfigManager:
         self._data["unitree_email"] = email
         self._save()
 
+    # ── UI 语言（zh / en）──
+    def get_language(self) -> str:
+        return self._data.get("language", "zh")
+
+    def set_language(self, lang: str):
+        if lang not in ("zh", "en"):
+            lang = "zh"
+        self._data["language"] = lang
+        self._save()
+
     # ── 命名配置：一次性保存当前列表的所有机器人（含 IP / AES 密钥），
     # 之后用「配置连接」一键把整个配置加回来。结构：
     #     saved_configs: [
@@ -462,8 +502,6 @@ class RobotInfo:
         # Go2 姿态标记：趴下/坐下/站立等姿态指令后置 True，
         # 下次摇杆移动前自动发 RecoveryStand 恢复行走模式
         self.needs_recovery: bool = False
-        # 对讲通话状态：True = 正在双向音频通话
-        self.audio_active: bool = False
 
     @property
     def is_go2(self) -> bool:
@@ -500,7 +538,6 @@ class RobotManager(QObject):
     audio_list_result     = pyqtSignal(str, list)     # robot_id, [{name, uuid}, ...]
     audio_upload_progress = pyqtSignal(str, int, int)  # robot_id, current, total
     audio_upload_done     = pyqtSignal(str, bool, str) # robot_id, ok, msg
-    audio_call_changed    = pyqtSignal(str, bool)      # robot_id, active
 
     # 执行后会脱离行走模式的 sport 指令 api_id 集合。
     # 发送这些指令后，需要在下次摇杆移动前先发 RecoveryStand 恢复行走。
@@ -553,10 +590,6 @@ class RobotManager(QObject):
                                         name="UnitreeAsyncLoop")
         self._thread.start()
 
-        # 对讲桥（懒加载：第一次 start_call 时才真正打开音频设备）
-        self._audio_bridge = None  # type: Optional["AudioBridge"]
-        self._audio_bridge_err: str = ""
-
     # ── 事件循环线程 ──
     def _run_loop(self):
         if sys.platform == "win32":
@@ -581,12 +614,6 @@ class RobotManager(QObject):
 
     def shutdown(self):
         logger.info("RobotManager 关闭，断开所有连接…")
-        # 关掉对讲桥（关闭麦克风/扬声器流 + 各 track）
-        if self._audio_bridge is not None:
-            try:
-                self._audio_bridge.shutdown()
-            except Exception as e:
-                logger.debug("AudioBridge.shutdown 异常：%s", e)
         future = self._submit(self._disconnect_all())
         try:
             future.result(timeout=3.0)   # 最多等 3 秒让断开完成
@@ -644,16 +671,6 @@ class RobotManager(QObject):
         return robot_id
 
     def remove_robot(self, robot_id: str):
-        # 若正在通话，先解注册对讲（在删除之前，因为需要 conn 引用来 removeTrack）
-        pre = self._robots.get(robot_id)
-        if pre and pre.audio_active and self._audio_bridge is not None:
-            try:
-                self._audio_bridge.unregister_call(robot_id)
-            except Exception as e:
-                logger.debug("remove_robot: unregister_call 异常：%s", e)
-            pre.audio_active = False
-            self.audio_call_changed.emit(robot_id, False)
-
         with self._lock:
             robot = self._robots.pop(robot_id, None)
         if robot:
@@ -717,22 +734,51 @@ class RobotManager(QObject):
             self._rec_hook("joystick", list(robot_ids), lx=lx, ly=ly, rx=rx, ry=ry)
         self._submit(self._send_joystick_async(list(robot_ids), lx, ly, rx, ry))
 
-    def emergency_stop_robots(self, robot_ids: List[str]):
-        """立即停止（发零值摇杆 + Go2 StopMove），优先级最高。"""
-        logger.info("🚨 紧急停止 → %s", robot_ids)
-        self._submit(self._emergency_stop_async(list(robot_ids)))
+    def g1_ids_among(self, robot_ids: List[str]) -> List[str]:
+        """筛出 robot_ids 里的 G1，UI 用来判断要不要在急停前弹二次确认。"""
+        return [rid for rid in robot_ids
+                if (r := self._robots.get(rid)) and r.is_g1]
 
-    def emergency_stop_all(self):
-        """紧急停止所有已连接机器人（编排播放器急停用）。"""
+    def emergency_stop_go2(self, robot_ids: List[str]):
+        """Go2 急停（发零值摇杆 + StopMove+Damp），安全，无需二次确认，优先级最高。"""
+        logger.info("🚨 Go2 紧急停止 → %s", robot_ids)
+        self._submit(self._emergency_stop_go2_async(list(robot_ids)))
+
+    def emergency_stop_g1(self, robot_ids: List[str]):
+        """G1 急停（切阻尼）——**调用前必须已经过用户二次确认**，见 _emergency_stop_g1_async
+        的风险说明（走跑中被切阻尼会直接摔倒，和 Go2 不是一个风险量级）。"""
+        logger.info("🚨 G1 紧急停止（切阻尼，未验证安全性）→ %s", robot_ids)
+        self._submit(self._emergency_stop_g1_async(list(robot_ids)))
+
+    def emergency_stop_robots(self, robot_ids: List[str]):
+        """兼容旧调用方保留的名字，现在只做 Go2 部分（安全）。G1 请显式调用
+        emergency_stop_g1（走"先弹二次确认再执行"的流程，不能在这里顺手一起发）。"""
+        self.emergency_stop_go2(robot_ids)
+
+    def emergency_stop_all_go2(self):
+        """紧急停止所有已连接 Go2（编排播放器急停用，安全部分）。"""
         all_ids = [
             rid for rid, r in self._robots.items()
-            if r.status == STATUS_CONNECTED
+            if r.status == STATUS_CONNECTED and r.is_go2
         ]
         if all_ids:
-            logger.info("🚨 全体紧急停止 → %d 台", len(all_ids))
-            self._submit(self._emergency_stop_async(all_ids))
+            logger.info("🚨 全体 Go2 紧急停止 → %d 台", len(all_ids))
+            self._submit(self._emergency_stop_go2_async(all_ids))
         else:
-            logger.info("🚨 全体紧急停止：当前无已连接机器人")
+            logger.info("🚨 全体 Go2 紧急停止：当前无已连接 Go2")
+
+    def emergency_stop_all_g1(self):
+        """紧急停止所有已连接 G1（编排播放器急停用，风险部分）——调用前 UI 必须已经过
+        用户二次确认，别直接绑到按钮上。"""
+        all_ids = [
+            rid for rid, r in self._robots.items()
+            if r.status == STATUS_CONNECTED and r.is_g1
+        ]
+        if all_ids:
+            logger.info("🚨 全体 G1 紧急停止（切阻尼，未验证安全性）→ %d 台", len(all_ids))
+            self._submit(self._emergency_stop_g1_async(all_ids))
+        else:
+            logger.info("🚨 全体 G1 紧急停止：当前无已连接 G1")
 
     def stop_choreography(self, robot_ids: List[str]):
         """编排结束/停止的收尾指令：强制中断舞蹈 + 恢复可控移动。
@@ -786,116 +832,6 @@ class RobotManager(QObject):
     def upload_audio(self, robot_id: str, file_path: str):
         """上传音频文件到机器人（MP3 自动转 WAV）。"""
         self._submit(self._upload_audio_async(robot_id, file_path))
-
-    def stream_audio_file(self, robot_ids: List[str], file_path: str):
-        """用 megaphone 模式把本地音频文件流式推送到机器人播放。"""
-        self._submit(self._stream_audio_file_async(
-            list(robot_ids), file_path))
-
-    def stop_stream_audio(self, robot_ids: List[str]):
-        """停止 megaphone 音频流。"""
-        self._submit(self._stop_stream_audio_async(list(robot_ids)))
-
-    # ── 双向对讲 (WebRTC audio) ──────────────────────────────────
-
-    def _ensure_audio_bridge(self):
-        """懒加载 AudioBridge；返回 (bridge, err_msg)。"""
-        if self._audio_bridge is not None:
-            return self._audio_bridge, ""
-        if self._audio_bridge_err:
-            return None, self._audio_bridge_err
-        try:
-            from audio_bridge import AudioBridge  # 延迟导入，避免启动即失败
-            self._audio_bridge = AudioBridge(self._loop)
-            return self._audio_bridge, ""
-        except Exception as e:
-            msg = f"对讲功能不可用：{e}"
-            self._audio_bridge_err = msg
-            logger.error(msg)
-            return None, msg
-
-    def start_call(self, robot_id: str):
-        """开启该机器人的双向音频通话。仅 Go2 支持（G1 未验证）。
-        UI 层用 audio_call_changed 信号监听状态；错误通过 command_result 报。"""
-        robot = self._robots.get(robot_id)
-        if not robot:
-            return
-        if not robot.is_go2:
-            self.command_result.emit(robot_id, False, "对讲当前仅支持 Go2")
-            return
-        if robot.status != STATUS_CONNECTED or not robot.conn:
-            self.command_result.emit(robot_id, False, "机器人未连接，无法开启对讲")
-            return
-        if robot.audio_active:
-            return
-        bridge, err = self._ensure_audio_bridge()
-        if not bridge:
-            self.command_result.emit(robot_id, False, err)
-            return
-        # 在 asyncio 线程中注册（addTrack 会触发 SDP renegotiation，需要在 loop 上跑）
-        self._submit(self._start_call_async(robot_id))
-
-    def stop_call(self, robot_id: str):
-        robot = self._robots.get(robot_id)
-        if not robot or not robot.audio_active:
-            return
-        self._submit(self._stop_call_async(robot_id))
-
-    def is_call_active(self, robot_id: str) -> bool:
-        r = self._robots.get(robot_id)
-        return bool(r and r.audio_active)
-
-    def stop_all_calls(self):
-        for rid, r in list(self._robots.items()):
-            if r.audio_active:
-                self.stop_call(rid)
-
-    def set_mic_muted(self, muted: bool):
-        b, _ = self._ensure_audio_bridge()
-        if b is not None:
-            b.set_mic_muted(muted)
-
-    def is_mic_muted(self) -> bool:
-        if self._audio_bridge is None:
-            return True
-        return self._audio_bridge.is_mic_muted()
-
-    def set_playback_volume(self, v: float):
-        b, _ = self._ensure_audio_bridge()
-        if b is not None:
-            b.set_playback_volume(v)
-
-    def playback_volume(self) -> float:
-        if self._audio_bridge is None:
-            return 0.6
-        return self._audio_bridge.playback_volume()
-
-    async def _start_call_async(self, robot_id: str):
-        robot = self._robots.get(robot_id)
-        if not robot or not robot.conn:
-            return
-        try:
-            self._audio_bridge.register_call(robot_id, robot.conn)
-        except Exception as e:
-            logger.exception("register_call 失败 [%s]", robot.name)
-            self.command_result.emit(robot_id, False, f"开启对讲失败：{e}")
-            return
-        robot.audio_active = True
-        self._log(f"🎙 [{robot.name}] 开启对讲")
-        self.audio_call_changed.emit(robot_id, True)
-
-    async def _stop_call_async(self, robot_id: str):
-        robot = self._robots.get(robot_id)
-        if not robot:
-            return
-        try:
-            if self._audio_bridge is not None:
-                self._audio_bridge.unregister_call(robot_id)
-        except Exception as e:
-            logger.debug("unregister_call 异常 [%s]：%s", robot.name, e)
-        robot.audio_active = False
-        self._log(f"🎙 [{robot.name}] 结束对讲")
-        self.audio_call_changed.emit(robot_id, False)
 
     def scan_network(self, timeout: float = 3.0):
         self._submit(self._scan_network_async(timeout))
@@ -965,35 +901,37 @@ class RobotManager(QObject):
 
             if robot.is_go2:
                 await self._setup_go2_monitoring(robot_id)
+            elif robot.is_g1:
+                await self._setup_g1_monitoring(robot_id)
 
             gen = self._watchdog_gen.get(robot_id, 0) + 1
             self._watchdog_gen[robot_id] = gen
             asyncio.ensure_future(self._connection_watchdog(robot_id, gen))
 
         except asyncio.TimeoutError:
-            msg = f"连接超时（15 秒），请检查 {addr} 是否在线"
+            msg = _t("连接超时（15 秒），请检查 {addr} 是否在线", addr=addr)
             self._log(f"❌ [{robot.name}] {msg}", "error")
             self._set_error(robot_id, msg)
         except AesKeyRequiredError:
-            msg = ("此机器人为新固件 (data2=3)，需要 AES-128 密钥。"
-                   "请右键机器人 → 编辑 AES 密钥，从云端拉取。")
+            msg = _t("此机器人为新固件 (data2=3)，需要 AES-128 密钥。"
+                     "请右键机器人 → 编辑 AES 密钥，从云端拉取。")
             self._log(f"❌ [{robot.name}] {msg}", "error")
             self._set_error(robot_id, msg)
         except AesKeyRejectedError as e:
-            msg = (f"AES 密钥不匹配（机器人重置/重置 SN 后会重新分配）。"
-                   f"请重新从云端拉取。详情：{e}")
+            msg = _t("AES 密钥不匹配（机器人重置/重置 SN 后会重新分配）。"
+                     "请重新从云端拉取。详情：{err}", err=e)
             self._log(f"❌ [{robot.name}] {msg}", "error")
             self._set_error(robot_id, msg)
         except LocalSignalingPortError as e:
-            msg = f"无法连接机器人 9991/8081 端口，请检查电源 / 网络（{e}）"
+            msg = _t("无法连接机器人 9991/8081 端口，请检查电源 / 网络（{err}）", err=e)
             self._log(f"❌ [{robot.name}] {msg}", "error")
             self._set_error(robot_id, msg)
         except RobotBusyError:
-            msg = "机器人已被其它客户端占用（手机 APP 等），请断开后重试"
+            msg = _t("机器人已被其它客户端占用（手机 APP 等），请断开后重试")
             self._log(f"❌ [{robot.name}] {msg}", "error")
             self._set_error(robot_id, msg)
         except (NoSdpAnswerError, DataChannelTimeoutError) as e:
-            msg = f"握手超时，机器人可能掉线：{e}"
+            msg = _t("握手超时，机器人可能掉线：{err}", err=e)
             self._log(f"❌ [{robot.name}] {msg}", "error")
             self._set_error(robot_id, msg)
         except ConnectionError as e:
@@ -1006,21 +944,13 @@ class RobotManager(QObject):
         except Exception as e:
             logger.exception("[%s] 连接异常详情", robot.name)
             self._log(f"❌ [{robot.name}] 连接异常：{type(e).__name__}: {e}", "error")
-            self._set_error(robot_id, f"连接失败：{e}")
+            self._set_error(robot_id, _t("连接失败：{err}", err=e))
 
     def _set_error(self, robot_id: str, msg: str):
         robot = self._robots.get(robot_id)
         if robot:
             robot.status    = STATUS_ERROR
             robot.error_msg = msg
-            # 掉线时若正在通话，主动清理，避免 audio track 悬空
-            if robot.audio_active and self._audio_bridge is not None:
-                try:
-                    self._audio_bridge.unregister_call(robot_id)
-                except Exception as e:
-                    logger.debug("_set_error 中 unregister_call 异常：%s", e)
-                robot.audio_active = False
-                self.audio_call_changed.emit(robot_id, False)
         self.robot_status_changed.emit(robot_id, STATUS_ERROR, msg)
 
     async def _setup_go2_monitoring(self, robot_id: str):
@@ -1054,6 +984,38 @@ class RobotManager(QObject):
             logger.info("[%s] 已订阅 LOW_STATE", robot.name)
         except Exception as e:
             logger.warning("[%s] 订阅 LOW_STATE 失败: %s", robot.name, e)
+
+    async def _setup_g1_monitoring(self, robot_id: str):
+        """G1 电量监控：订阅 rt/lf/bmsstate，data.soc 直接就是百分比（不像 Go2 还要再
+        解一层 bms_state）。抓包实测 soc=60 对应 60%。"""
+        robot = self._robots.get(robot_id)
+        if not robot or not robot.conn:
+            return
+
+        def _on_bms_state(message):
+            try:
+                data = message.get("data", {})
+                soc  = data.get("soc")
+                if soc is not None:
+                    if isinstance(soc, (int, float)):
+                        robot.battery = int(soc)
+                    elif isinstance(soc, str) and soc.isdigit():
+                        robot.battery = int(soc)
+                    else:
+                        logger.warning("[%s] 未知电池格式: %s (type=%s)",
+                                      robot.name, soc, type(soc))
+                        return
+                    self.robot_battery_updated.emit(robot_id, robot.battery)
+                    logger.debug("[%s] 电量=%d%%", robot.name, robot.battery)
+            except Exception as e:
+                logger.debug("BMS_STATE 解析错误：%s", e)
+
+        topic = RTC_TOPIC.get("LF_BMS_STATE", "rt/lf/bmsstate")
+        try:
+            robot.conn.datachannel.pub_sub.subscribe(topic, _on_bms_state)
+            logger.info("[%s] 已订阅 G1 bmsstate", robot.name)
+        except Exception as e:
+            logger.warning("[%s] 订阅 bmsstate 失败: %s", robot.name, e)
 
     async def _connection_watchdog(self, robot_id: str, gen: int):
         await asyncio.sleep(5)
@@ -1153,6 +1115,8 @@ class RobotManager(QObject):
 
                 if robot.is_go2:
                     await self._setup_go2_monitoring(robot_id)
+                elif robot.is_g1:
+                    await self._setup_g1_monitoring(robot_id)
                 gen = self._watchdog_gen.get(robot_id, 0) + 1
                 self._watchdog_gen[robot_id] = gen
                 asyncio.ensure_future(self._connection_watchdog(robot_id, gen))
@@ -1290,19 +1254,26 @@ class RobotManager(QObject):
             self._log(f"▶ 发送(ff) [{cmd_name}(api_id={api_id})] → "
                       f"{', '.join(sent_names)}")
 
-    async def _emergency_stop_async(self, robot_ids: List[str]):
-        """紧急停止：零值摇杆 + StopMove + 切换运动模式（强制中断舞蹈动画）。
+    async def _emergency_stop_go2_async(self, robot_ids: List[str]):
+        """Go2 急停：零摇杆 + StopMove + Damp（req，priority=1 插队）。安全，无需二次确认。
 
-        StopMove / RecoveryStand 只能停移动，无法中断正在播放的舞蹈。
-        真正中断舞蹈的方法是切换 MOTION_SWITCHER 模式，让状态机强制重置。
+        之前这里的实现（零摇杆 + StopMove+BalanceStand fire-and-forget → 切
+        MOTION_SWITCHER 到 "normal" → 等 300ms → RecoveryStand）全部是没有
+        抓包验证过的猜测。用 Frida 实测抓过官方 App 点急停的真实报文：在同一秒
+        内连发两条 **req**（不是 fire-and-forget 的 publish_without_callback），
+        StopMove(1003) 和 Damp(1001)，两条都在 header 里带 policy:{priority:1}——
+        跳过排队、立即执行靠的是这个 priority 字段，不是切运动模式，也不是用
+        BalanceStand（那只是保持平衡站姿，不会像 Damp 那样立刻卸掉电机力矩）。
+        参考库的 publish_request_new 本来就支持 priority 参数（见 pub_sub.py），
+        直接传 "priority": 1 就会在 header 里加上 policy。
         """
         payload = {"lx": 0.0, "ly": 0.0, "rx": 0.0, "ry": 0.0, "keys": 0}
-        all_tasks  = []   # (robot_id, name, cmd_label, task)
-        go2_names  = []
+        names = []
+        tasks = []
 
         for robot_id in robot_ids:
             robot = self._robots.get(robot_id)
-            if not robot or robot.status != STATUS_CONNECTED or not robot.conn:
+            if not robot or not robot.is_go2 or robot.status != STATUS_CONNECTED or not robot.conn:
                 continue
             try:
                 robot.conn.datachannel.pub_sub.publish_without_callback(
@@ -1310,66 +1281,69 @@ class RobotManager(QObject):
             except Exception as e:
                 logger.debug("[%s] 紧急停止摇杆失败: %s", robot.name, e)
 
-            if robot.is_go2:
-                pub = robot.conn.datachannel.pub_sub
-                generated_id = int(time.time() * 1000) & 0x7fffffff
-                try:
-                    pub.publish_without_callback(
-                        RTC_TOPIC["SPORT_MOD"],
-                        {"header": {"identity": {"id": generated_id, "api_id": SPORT_CMD["StopMove"]}}})
-                    pub.publish_without_callback(
-                        RTC_TOPIC["SPORT_MOD"],
-                        {"header": {"identity": {"id": generated_id+1, "api_id": SPORT_CMD["BalanceStand"]}}})
-                    go2_names.append(robot.name)
-                except Exception as e:
-                    logger.debug("[%s] 紧急停止运动指令下发失败: %s", robot.name, e)
+            pub = robot.conn.datachannel.pub_sub
+            # publish_request_new 会 await 机器人的响应，一旦机器人没回（离线、
+            # 队列堵塞……）会一直挂着——急停这种最高优先级的操作绝不能被这个卡住，
+            # 所以包一层超时，超时也当成"这条没发成功"处理，不影响其它机器人。
+            tasks.append(asyncio.wait_for(
+                pub.publish_request_new(
+                    RTC_TOPIC["SPORT_MOD"],
+                    {"api_id": SPORT_CMD["StopMove"], "priority": 1}),
+                timeout=2.0))
+            tasks.append(asyncio.wait_for(
+                pub.publish_request_new(
+                    RTC_TOPIC["SPORT_MOD"],
+                    {"api_id": SPORT_CMD["Damp"], "priority": 1}),
+                timeout=2.0))
+            names.append(robot.name)
 
-        if go2_names:
-            self._log(f"🚨 紧急停止 StopMove+BalanceStand → {', '.join(go2_names)}")
+        if names:
+            self._log(f"🚨 Go2 紧急停止 → {', '.join(names)}")
 
-        # 第二步：切换运动模式以强制中断舞蹈/动画
-        # 思路：先切到 "Damp"（阻尼，立即停止一切电机输出），稍等后恢复 "normal"
-        mode_tasks = []
-        mode_names = []
-        for robot_id in robot_ids:
-            robot = self._robots.get(robot_id)
-            if not robot or robot.status != STATUS_CONNECTED or not robot.conn:
-                continue
-            if robot.is_go2:
-                mode_tasks.append(
-                    robot.conn.datachannel.pub_sub.publish_request_new(
-                        RTC_TOPIC["MOTION_SWITCHER"],
-                        {"api_id": 1002, "parameter": {"name": "normal"}}))
-                mode_names.append(robot.name)
-
-        if mode_tasks:
-            self._log(f"🚨 强制切换运动模式 → normal: {', '.join(mode_names)}")
-            results = await asyncio.gather(*mode_tasks, return_exceptions=True)
-            for name, result in zip(mode_names, results):
+        if tasks:
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            for result in results:
                 if isinstance(result, Exception):
-                    logger.warning("[%s] 运动模式切换失败: %s", name, result)
-                else:
-                    logger.info("[%s] 运动模式切换成功", name)
+                    logger.warning("Go2 紧急停止指令下发失败: %s", result)
 
-        # 第三步：恢复动作切换（直接通过 fire-and-forget 下发 RecoveryStand）
-        await asyncio.sleep(0.3)  # 更短的等待，仅为了确保 mode 切换成功后再发 stand
-        stand_names = []
+    async def _emergency_stop_g1_async(self, robot_ids: List[str]):
+        """G1 急停：切阻尼（api_id=7101, data=1）——目前唯一抓包验证过的"降低电机出力"手段。
+
+        ⚠️ **高风险，调用前上层（UI）必须让用户二次确认**：G1 是双足人形，阻尼会让腿部
+        立刻卸力，如果这时候正在走跑(fsm_id=801)，站不住直接摔倒——这和 Go2 完全不是
+        一个风险量级（Go2 四足，阻尼后自然趴下更稳）。抓包时没能测出官方在"走跑过程中"
+        点急停会发生什么（每次都是先手动切回阻尼再蹲下），这里是"唯一已知的降力手段"，
+        不是"验证过安全"的手段。这个函数故意和 Go2 分开、不合并成一个统一急停入口，就是
+        为了逼上层调用方必须显式决定"这次要不要对 G1 也执行"。
+        """
+        payload = {"lx": 0.0, "ly": 0.0, "rx": 0.0, "ry": 0.0, "keys": 0}
+        names = []
+        tasks = []
+
         for robot_id in robot_ids:
             robot = self._robots.get(robot_id)
-            if not robot or robot.status != STATUS_CONNECTED or not robot.conn:
+            if not robot or not robot.is_g1 or robot.status != STATUS_CONNECTED or not robot.conn:
                 continue
-            if robot.is_go2:
-                try:
-                    generated_id = int(time.time() * 1000) & 0x7fffffff
-                    robot.conn.datachannel.pub_sub.publish_without_callback(
-                        RTC_TOPIC["SPORT_MOD"],
-                        {"header": {"identity": {"id": generated_id, "api_id": SPORT_CMD["RecoveryStand"]}}})
-                    stand_names.append(robot.name)
-                except Exception as e:
-                    logger.debug("[%s] RecoveryStand 失败: %s", robot.name, e)
+            try:
+                robot.conn.datachannel.pub_sub.publish_without_callback(
+                    RTC_TOPIC["WIRELESS_CONTROLLER"], payload)
+            except Exception as e:
+                logger.debug("[%s] 紧急停止摇杆失败: %s", robot.name, e)
 
-        if stand_names:
-            logger.info("紧急停止完成 RecoveryStand → %s", ", ".join(stand_names))
+            tasks.append(asyncio.wait_for(
+                robot.conn.datachannel.pub_sub.publish_request_new(
+                    "rt/api/sport/request", {"api_id": 7101, "parameter": {"data": 1}}),
+                timeout=2.0))
+            names.append(robot.name)
+
+        if names:
+            self._log(f"🚨 G1 紧急停止（切阻尼，未验证安全性）→ {', '.join(names)}")
+
+        if tasks:
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            for result in results:
+                if isinstance(result, Exception):
+                    logger.warning("G1 紧急停止指令下发失败: %s", result)
     async def _stop_choreography_async(self, robot_ids: List[str]):
         """编排收尾：强制中断舞蹈 + 恢复站立。相对紧急停止更温和、无日志告警。
 
@@ -1766,110 +1740,6 @@ class RobotManager(QObject):
             logger.error("[%s] 上传音频失败: %s", robot.name, e)
             self._log(f"❌ [{robot.name}] 上传音频失败：{e}", "error")
             self.audio_upload_done.emit(robot_id, False, str(e))
-
-    # ── Megaphone 音频流 ──
-
-    async def _stream_audio_file_async(self, robot_ids: List[str],
-                                       file_path: str):
-        """用 megaphone 模式把本地音频文件流式推到机器人播放。
-
-        流程：enter_megaphone → 分块上传音频 → 自动退出。
-        优点：不需要先上传到机器人存储，直接实时播放。
-        """
-        file_name = os.path.basename(file_path)
-        self._log(f"♪ 流式播放 [{file_name}] → {len(robot_ids)} 台机器人")
-
-        wav_path = file_path
-        if file_path.lower().endswith(".mp3"):
-            try:
-                from pydub import AudioSegment
-                audio = AudioSegment.from_mp3(file_path)
-                audio = audio.set_frame_rate(44100)
-                wav_path = file_path.rsplit(".", 1)[0] + "_stream.wav"
-                audio.export(wav_path, format="wav",
-                             parameters=["-ar", "44100"])
-            except ImportError:
-                self._log("❌ MP3 播放需要 pydub 库（pip install pydub）",
-                          "error")
-                return
-
-        try:
-            with open(wav_path, "rb") as f:
-                audio_data = f.read()
-        except FileNotFoundError:
-            self._log(f"❌ 文件不存在: {wav_path}", "error")
-            return
-
-        b64_data = base64.b64encode(audio_data).decode("utf-8")
-        chunk_size = 4096
-        chunks = [b64_data[i:i + chunk_size]
-                  for i in range(0, len(b64_data), chunk_size)]
-        total = len(chunks)
-
-        # 对每台机器人分别进入 megaphone 并推送
-        for robot_id in robot_ids:
-            robot = self._robots.get(robot_id)
-            if not robot or not robot.is_go2:
-                continue
-            if robot.status != STATUS_CONNECTED or not robot.conn:
-                continue
-            pub = robot.conn.datachannel.pub_sub
-
-            try:
-                # 进入 megaphone 模式
-                await pub.publish_request_new(
-                    RTC_TOPIC["AUDIO_HUB_REQ"],
-                    {"api_id": AUDIO_API["ENTER_MEGAPHONE"],
-                     "parameter": json.dumps({})})
-                logger.info("[%s] 进入 megaphone 模式", robot.name)
-
-                # 分块推送音频
-                for i, chunk in enumerate(chunks, 1):
-                    param = {
-                        "current_block_size": len(chunk),
-                        "block_content": chunk,
-                        "current_block_index": i,
-                        "total_block_number": total,
-                    }
-                    await pub.publish_request_new(
-                        RTC_TOPIC["AUDIO_HUB_REQ"],
-                        {"api_id": AUDIO_API["UPLOAD_MEGAPHONE"],
-                         "parameter": json.dumps(param, ensure_ascii=True)})
-                    if i % 100 == 0 or i == total:
-                        self.audio_upload_progress.emit(robot_id, i, total)
-                    await asyncio.sleep(0.02)
-
-                logger.info("[%s] megaphone 音频推送完成", robot.name)
-                self._log(f"✅ [{robot.name}] 播放完成")
-            except Exception as e:
-                logger.error("[%s] megaphone 播放失败: %s", robot.name, e)
-                self._log(f"❌ [{robot.name}] 播放失败：{e}", "error")
-
-    async def _stop_stream_audio_async(self, robot_ids: List[str]):
-        """退出 megaphone 模式，停止音频流。"""
-        tasks = []
-        names = []
-        for robot_id in robot_ids:
-            robot = self._robots.get(robot_id)
-            if not robot or not robot.is_go2:
-                continue
-            if robot.status != STATUS_CONNECTED or not robot.conn:
-                continue
-            tasks.append(
-                robot.conn.datachannel.pub_sub.publish_request_new(
-                    RTC_TOPIC["AUDIO_HUB_REQ"],
-                    {"api_id": AUDIO_API["EXIT_MEGAPHONE"],
-                     "parameter": json.dumps({})}))
-            names.append(robot.name)
-
-        if tasks:
-            self._log(f"♪ 停止音频流 → {', '.join(names)}")
-            results = await asyncio.gather(*tasks, return_exceptions=True)
-            for name, result in zip(names, results):
-                if isinstance(result, Exception):
-                    logger.warning("[%s] 退出 megaphone 失败: %s", name, result)
-                else:
-                    logger.info("[%s] 退出 megaphone 成功", name)
 
     # ── 网络扫描 ──
 

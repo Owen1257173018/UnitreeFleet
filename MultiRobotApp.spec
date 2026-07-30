@@ -46,7 +46,6 @@ hidden_imports = [
     'Crypto.PublicKey.ECC',
     # 其他可能被动态导入的包
     'engineio.async_drivers.threading',
-    'sounddevice',
     'numpy',
     'lz4.frame',
     'lz4.block',

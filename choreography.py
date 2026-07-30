@@ -62,6 +62,7 @@ from backend import (
     STATUS_CONNECTED,
     set_playback_verbose_logging,
 )
+from i18n import tr
 
 logger = logging.getLogger("unitree.choreo")
 
@@ -185,9 +186,10 @@ _SPORT_DURATION_MS: Dict[int, int] = {
 }
 SPORT_DEFAULT_DURATION_MS = 5_000
 
-# G1 手臂动作 / 运动模式 也没"停动作"API，统一按 5 秒预留，与机器狗 sport
-# 默认时长一致；下一步等本步走完才开始。
-G1_ACTION_FIXED_MS = 5_000
+# G1 手臂动作 / 运动模式 也没"停动作"API，只能按固定时长预留，下一步等本步走完才开始。
+# 实机测下来 10 秒才够：G1 是双足人形，手臂动作和起蹲这类状态切换都比四足慢，
+# 之前按 5 秒（照抄 Go2 sport 默认值）会在上一步还没做完时就发下一步，编排时间线漂掉。
+G1_ACTION_FIXED_MS = 10_000
 
 
 def get_sport_duration_ms(api_id: int) -> int:
@@ -229,7 +231,7 @@ class ChoreoScript:
         parts = []
         if n_go2: parts.append(f"Go2 × {n_go2}")
         if n_g1:  parts.append(f"G1 × {n_g1}")
-        return " + ".join(parts) + f"（共 {len(self.tracks)} 个位置）"
+        return " + ".join(parts) + tr("（共 {n} 个位置）", n=len(self.tracks))
 
     # ── 序列化 ──────────────────────────────────────────────
 
@@ -324,17 +326,19 @@ def check_script_compat(script: "ChoreoScript",
     n_script = len(script.tracks)
     n_dev    = len(ordered_robots)
     if n_script != n_dev:
-        return False, (
-            f"本编排要求设备列表有 {n_script} 个机器人（按顺序），"
-            f"但当前设备列表有 {n_dev} 个。"
-            f"请在编排库中打开编辑器删除多余的空白轨道后再试。")
+        return False, tr(
+            "本编排要求设备列表有 {ns} 个机器人（按顺序），"
+            "但当前设备列表有 {nd} 个。"
+            "请在编排库中打开编辑器删除多余的空白轨道后再试。",
+            ns=n_script, nd=n_dev)
     for i, (track, robot) in enumerate(zip(script.tracks, ordered_robots)):
         if track.robot_type != robot.robot_type:
             want = "Go2" if track.robot_type == ROBOT_TYPE_GO2 else "G1"
             have = "Go2" if robot.robot_type  == ROBOT_TYPE_GO2 else "G1"
-            return False, (
-                f"第 {i + 1} 个位置类型不匹配：编排需要 {want}，"
-                f"当前设备列表该位置是 {have}（{robot.name}）。")
+            return False, tr(
+                "第 {i} 个位置类型不匹配：编排需要 {want}，"
+                "当前设备列表该位置是 {have}（{name}）。",
+                i=i + 1, want=want, have=have, name=robot.name)
     return True, ""
 
 
@@ -342,13 +346,13 @@ def check_script_compat(script: "ChoreoScript",
 # 录制辅助
 # ──────────────────────────────────────────────────────────
 def _move_label(lx: float, ly: float, rx: float) -> str:
-    if   ly >  0.1: return "▲ 前进"
-    if   ly < -0.1: return "▼ 后退"
-    if   rx < -0.1: return "↺ 左转"
-    if   rx >  0.1: return "↻ 右转"
-    if   lx < -0.1: return "◀ 左移"
-    if   lx >  0.1: return "▶ 右移"
-    return "移动"
+    if   ly >  0.1: return tr("▲ 前进")
+    if   ly < -0.1: return tr("▼ 后退")
+    if   rx < -0.1: return tr("↺ 左转")
+    if   rx >  0.1: return tr("↻ 右转")
+    if   lx < -0.1: return tr("◀ 左移")
+    if   lx >  0.1: return tr("▶ 右移")
+    return tr("移动")
 
 
 class RecordingSession:
@@ -425,7 +429,8 @@ class RecordingSession:
         start_t = self._joy_start_ms.get(rid, end_t)
         dur_ms  = max(100, end_t - start_t)
         speed   = max(abs(lx), abs(ly), abs(rx))
-        label   = f"{_move_label(lx, ly, rx)}(速度{speed:.1f})"
+        label   = tr("{dir}(速度{speed})",
+                     dir=_move_label(lx, ly, rx), speed=f"{speed:.1f}")
         self._events[rid].append(
             (start_t, "move", 0, label,
              {"lx": lx, "ly": ly, "rx": rx, "ry": ry, "duration_ms": dur_ms}))
@@ -454,7 +459,7 @@ class RecordingSession:
             for ev_idx, (t, action_type, api_id, label, params) in enumerate(events):
                 gap = t - prev_end_ms
                 if gap > 300:
-                    track.steps.append(ChoreoStep("wait", 0, "等待", gap))
+                    track.steps.append(ChoreoStep("wait", 0, tr("等待"), gap))
 
                 if action_type == "move":
                     dur = params.get("duration_ms", 1000)
@@ -476,6 +481,12 @@ class RecordingSession:
                         dur = max(500, end_ms - t)
                     track.steps.append(ChoreoStep(action_type, api_id, label, dur))
                     prev_end_ms = t + dur
+
+            # 收尾对齐：把这条轨道补到全局结束时刻。只动一台机器人时，其它机器人整段
+            # 都是等待（而不是「轮到它才从头开始」），各轨道等长、回放时序和录制时一致。
+            tail = end_ms - prev_end_ms
+            if tail > 300:
+                track.steps.append(ChoreoStep("wait", 0, tr("等待"), tail))
 
             script.tracks.append(track)
 
@@ -561,7 +572,7 @@ class TimelineCanvas(QWidget):
             p.setPen(QColor("#45475a"))
             p.setFont(QFont("PingFang SC", 11))
             p.drawText(0, 0, w, h, Qt.AlignmentFlag.AlignCenter,
-                       "暂无内容 — 请先添加角色和步骤")
+                       tr("暂无内容 — 请先添加角色和步骤"))
             p.end()
             return
 
@@ -689,7 +700,7 @@ class ChoreoEditorDialog(QDialog):
         self._sel_step_idx    = -1
         self._is_dirty        = False
 
-        self.setWindowTitle("机器人编排编辑器")
+        self.setWindowTitle(tr("机器人编排编辑器"))
         self.resize(1150, 760)
         self.setMinimumSize(920, 620)
         self.setStyleSheet(_DIALOG_STYLE)
@@ -711,27 +722,27 @@ class ChoreoEditorDialog(QDialog):
 
         # ── 顶部工具栏 ──
         top = QHBoxLayout()
-        top.addWidget(QLabel("编排名称："))
+        top.addWidget(QLabel(tr("编排名称：")))
         self._name_edit = QLineEdit(self._script.name)
         self._name_edit.setFixedWidth(200)
         self._name_edit.textChanged.connect(
             lambda t: setattr(self._script, "name", t))
 
-        load_btn   = QPushButton("📂 加载")
-        append_btn = QPushButton("➕ 追加编排")
-        save_btn   = QPushButton("💾 保存")
-        play_btn   = QPushButton("▶  播放")
-        clear_btn  = QPushButton("🗑 清空步骤")
+        load_btn   = QPushButton(tr("📂 加载"))
+        append_btn = QPushButton(tr("➕ 追加编排"))
+        save_btn   = QPushButton(tr("💾 保存"))
+        play_btn   = QPushButton(tr("▶  播放"))
+        clear_btn  = QPushButton(tr("🗑 清空步骤"))
         for b, s in ((load_btn, _BTN), (append_btn, _BTN),
                      (save_btn, _PRIMARY), (play_btn, _PRIMARY),
                      (clear_btn, _DANGER)):
             b.setStyleSheet(s)
             b.setFixedHeight(30)
 
-        append_btn.setToolTip(
+        append_btn.setToolTip(tr(
             "选择另一份编排 JSON，把它的步骤按位置并联地接在当前编排末尾。\n"
-            "两份编排将同时运行。轨道布局（数量 + 每个位置的类型）必须完全一致。")
-        clear_btn.setToolTip("清空所有轨道的步骤，但保留轨道布局")
+            "两份编排将同时运行。轨道布局（数量 + 每个位置的类型）必须完全一致。"))
+        clear_btn.setToolTip(tr("清空所有轨道的步骤，但保留轨道布局"))
 
         load_btn.clicked.connect(self._on_load)
         append_btn.clicked.connect(self._on_append_script)
@@ -758,7 +769,7 @@ class ChoreoEditorDialog(QDialog):
         h_split.setSizes([200, 950])
 
         # ── 底部：时间线（与主区域上下可拖拽）──
-        tl_group = QGroupBox("时间线预览（点击步骤可快速定位）")
+        tl_group = QGroupBox(tr("时间线预览（点击步骤可快速定位）"))
         tl_v = QVBoxLayout(tl_group)
         tl_v.setContentsMargins(4, 8, 4, 4)
 
@@ -791,14 +802,14 @@ class ChoreoEditorDialog(QDialog):
         v.setContentsMargins(0, 0, 0, 0)
         v.setSpacing(4)
 
-        grp = QGroupBox("轨道（对应设备列表位置）")
+        grp = QGroupBox(tr("轨道（对应设备列表位置）"))
         gv  = QVBoxLayout(grp)
         gv.setSpacing(4)
         gv.setContentsMargins(6, 10, 6, 6)
 
-        tip = QLabel(
+        tip = QLabel(tr(
             "轨道 #N 对应左侧设备列表第 N 个机器人。\n"
-            "可手动添加 Go2 / G1 轨道，也可按设备列表自动生成。")
+            "可手动添加 Go2 / G1 轨道，也可按设备列表自动生成。"))
         tip.setStyleSheet("color:#6c7086; font-size:10px;")
         tip.setWordWrap(True)
         gv.addWidget(tip)
@@ -809,8 +820,8 @@ class ChoreoEditorDialog(QDialog):
         for b in (add_go2_btn, add_g1_btn):
             b.setStyleSheet(_BTN)
             b.setFixedHeight(28)
-        add_go2_btn.setToolTip("添加一条 Go2（机器狗）空轨道")
-        add_g1_btn.setToolTip("添加一条 G1（人形）空轨道")
+        add_go2_btn.setToolTip(tr("添加一条 Go2（机器狗）空轨道"))
+        add_g1_btn.setToolTip(tr("添加一条 G1（人形）空轨道"))
         add_go2_btn.clicked.connect(lambda: self._add_track(ROBOT_TYPE_GO2))
         add_g1_btn.clicked.connect(lambda: self._add_track(ROBOT_TYPE_G1))
         add_row.addWidget(add_go2_btn)
@@ -818,19 +829,19 @@ class ChoreoEditorDialog(QDialog):
         gv.addLayout(add_row)
 
         btn_row = QHBoxLayout()
-        del_btn = QPushButton("删除选中轨道")
+        del_btn = QPushButton(tr("删除选中轨道"))
         del_btn.setStyleSheet(_DANGER)
         del_btn.setFixedHeight(28)
-        del_btn.setToolTip(
+        del_btn.setToolTip(tr(
             "从本编排移除选中的轨道并重新编号。通常用于裁掉未使用的空轨道，\n"
-            "让编排文件可在更少机器人的设备列表上播放。")
+            "让编排文件可在更少机器人的设备列表上播放。"))
         del_btn.clicked.connect(self._del_track)
 
-        reseed_btn = QPushButton("按当前设备列表重置")
+        reseed_btn = QPushButton(tr("按当前设备列表重置"))
         reseed_btn.setStyleSheet(_BTN)
         reseed_btn.setFixedHeight(28)
-        reseed_btn.setToolTip(
-            "清空当前所有步骤，按当前设备列表（从上到下）重新 seed 轨道。")
+        reseed_btn.setToolTip(tr(
+            "清空当前所有步骤，按当前设备列表（从上到下）重新 seed 轨道。"))
         reseed_btn.clicked.connect(self._reseed_from_device_list)
 
         btn_row.addWidget(del_btn)
@@ -864,14 +875,14 @@ class ChoreoEditorDialog(QDialog):
         return w
 
     def _build_action_picker(self) -> QWidget:
-        grp = QGroupBox("动作选择")
+        grp = QGroupBox(tr("动作选择"))
         v   = QVBoxLayout(grp)
         v.setContentsMargins(8, 12, 8, 8)
         v.setSpacing(8)
 
         # 时长 + 等待 同一行
         dur_row = QHBoxLayout()
-        dur_row.addWidget(QLabel("步骤时长："))
+        dur_row.addWidget(QLabel(tr("步骤时长：")))
         self._dur_spin = QDoubleSpinBox()
         self._dur_spin.setRange(0.2, 60.0)
         self._dur_spin.setValue(3.0)
@@ -881,13 +892,13 @@ class ChoreoEditorDialog(QDialog):
         self._dur_spin.setFixedWidth(90)
         dur_row.addWidget(self._dur_spin)
         dur_row.addSpacing(16)
-        wait_btn = QPushButton("⏸  添加等待")
+        wait_btn = QPushButton(tr("⏸  添加等待"))
         wait_btn.setStyleSheet(_BTN)
         wait_btn.setFixedHeight(30)
-        wait_btn.setToolTip("不发命令，仅等待指定时长")
+        wait_btn.setToolTip(tr("不发命令，仅等待指定时长"))
         wait_btn.clicked.connect(lambda: self._add_step(
             ChoreoStep("wait", 0,
-                       f"等待 {self._dur_spin.value():.1f}s",
+                       tr("等待 {s}s", s=f"{self._dur_spin.value():.1f}"),
                        int(self._dur_spin.value() * 1000))))
         dur_row.addWidget(wait_btn)
         dur_row.addStretch()
@@ -898,9 +909,9 @@ class ChoreoEditorDialog(QDialog):
         self._move_tab = self._build_move_picker()
         self._go2_tab  = self._build_go2_picker()
         self._g1_tab   = self._build_g1_picker()
-        self._action_tabs.addTab(self._move_tab, "移动")
-        self._action_tabs.addTab(self._go2_tab,  "Go2 动作")
-        self._action_tabs.addTab(self._g1_tab,   "G1 动作")
+        self._action_tabs.addTab(self._move_tab, tr("移动"))
+        self._action_tabs.addTab(self._go2_tab,  tr("Go2 动作"))
+        self._action_tabs.addTab(self._g1_tab,   tr("G1 动作"))
         v.addWidget(self._action_tabs, 1)
 
         return grp
@@ -920,14 +931,15 @@ class ChoreoEditorDialog(QDialog):
             grid.setSpacing(4)
             grid.setContentsMargins(4, 8, 4, 4)
             for idx, (api_id, label) in enumerate(actions):
-                btn = QPushButton(label)
+                btn = QPushButton(tr(label))
                 btn.setStyleSheet(_ACTION_BTN)
                 btn.setFixedHeight(30)
                 # sport 动作的时长从标准表取（舞蹈1=25s/舞蹈2=40s/其他=15s）
                 # 不再用时长滑块；因为机器狗没有"停动作"API，缩短时长会在下
                 # 一步真正执行前就把时间线推过，造成漂移/卡顿。
                 std_dur = get_sport_duration_ms(api_id)
-                btn.setToolTip(f"该动作时长：{std_dur / 1000:.0f} s（已固定）")
+                btn.setToolTip(tr("该动作时长：{s} s（已固定）",
+                                  s=f"{std_dur / 1000:.0f}"))
                 btn.clicked.connect(
                     lambda checked, aid=api_id, lbl=label, d=std_dur: self._add_step(
                         ChoreoStep("sport", aid, lbl, d)))
@@ -952,30 +964,34 @@ class ChoreoEditorDialog(QDialog):
 
         # G1 手臂动作和运动模式与机器狗 sport 一样固定 5 秒，避免编排
         # 时间线和实际动作不同步（没有"停动作"API）。
-        arm_grp  = QGroupBox(f"手臂动作（固定 {G1_ACTION_FIXED_MS // 1000} 秒）")
+        arm_grp  = QGroupBox(tr("手臂动作（固定 {n} 秒）",
+                                n=G1_ACTION_FIXED_MS // 1000))
         arm_grid = QGridLayout(arm_grp)
         arm_grid.setSpacing(4)
         arm_grid.setContentsMargins(4, 8, 4, 4)
         for idx, (data, label) in enumerate(G1_ARM_ACTIONS):
-            btn = QPushButton(label)
+            btn = QPushButton(tr(label))
             btn.setStyleSheet(_ACTION_BTN)
             btn.setFixedHeight(30)
-            btn.setToolTip(f"该动作时长：{G1_ACTION_FIXED_MS / 1000:.0f} s（已固定）")
+            btn.setToolTip(tr("该动作时长：{s} s（已固定）",
+                              s=f"{G1_ACTION_FIXED_MS / 1000:.0f}"))
             btn.clicked.connect(
                 lambda checked, d=data, lbl=label: self._add_step(
                     ChoreoStep("arm", d, lbl, G1_ACTION_FIXED_MS)))
             arm_grid.addWidget(btn, idx // 4, idx % 4)
         inner_v.addWidget(arm_grp)
 
-        mode_grp  = QGroupBox(f"运动模式（固定 {G1_ACTION_FIXED_MS // 1000} 秒）")
+        mode_grp  = QGroupBox(tr("运动模式（固定 {n} 秒）",
+                                 n=G1_ACTION_FIXED_MS // 1000))
         mode_grid = QGridLayout(mode_grp)
         mode_grid.setSpacing(4)
         mode_grid.setContentsMargins(4, 8, 4, 4)
         for idx, (code, label) in enumerate(G1_MOVE_MODES):
-            btn = QPushButton(label)
+            btn = QPushButton(tr(label))
             btn.setStyleSheet(_ACTION_BTN)
             btn.setFixedHeight(30)
-            btn.setToolTip(f"该模式时长：{G1_ACTION_FIXED_MS / 1000:.0f} s（已固定）")
+            btn.setToolTip(tr("该模式时长：{s} s（已固定）",
+                              s=f"{G1_ACTION_FIXED_MS / 1000:.0f}"))
             btn.clicked.connect(
                 lambda checked, c=code, lbl=label: self._add_step(
                     ChoreoStep("g1_mode", c, lbl, G1_ACTION_FIXED_MS)))
@@ -996,14 +1012,14 @@ class ChoreoEditorDialog(QDialog):
         v.setContentsMargins(6, 6, 6, 6)
         v.setSpacing(8)
 
-        tip = QLabel("移动适用于 Go2 和 G1，播放时持续发送摇杆指令直到步骤结束。")
+        tip = QLabel(tr("移动适用于 Go2 和 G1，播放时持续发送摇杆指令直到步骤结束。"))
         tip.setWordWrap(True)
         tip.setStyleSheet("color:#585b70; font-size:11px;")
         v.addWidget(tip)
 
         # ── 速度滑块 ──
         spd_row = QHBoxLayout()
-        spd_lbl = QLabel("速度：")
+        spd_lbl = QLabel(tr("速度："))
         spd_lbl.setStyleSheet("color:#a6adc8; font-size:12px;")
         self._move_speed_slider = QSlider(Qt.Orientation.Horizontal)
         self._move_speed_slider.setRange(10, 100)
@@ -1019,7 +1035,7 @@ class ChoreoEditorDialog(QDialog):
         v.addLayout(spd_row)
 
         # ── 方向控制（前进/后退/左转/右转）──
-        dir_grp = QGroupBox("方向控制")
+        dir_grp = QGroupBox(tr("方向控制"))
         dir_grid = QGridLayout(dir_grp)
         dir_grid.setSpacing(6)
         dir_grid.setContentsMargins(8, 12, 8, 8)
@@ -1036,7 +1052,7 @@ class ChoreoEditorDialog(QDialog):
             ("▼\n后退", 0.0, -1.0,  0.0, 2, 1),
         ]
         for label, lx, ly, rx, row, col in _MOVE_ACTIONS:
-            btn = QPushButton(label)
+            btn = QPushButton(tr(label))
             btn.setStyleSheet(_ACTION_BTN)
             btn.setMinimumHeight(64)
             btn.setSizePolicy(QSizePolicy.Policy.Expanding,
@@ -1053,7 +1069,8 @@ class ChoreoEditorDialog(QDialog):
                        lx: float, ly: float, rx: float):
         """创建一个 move 类型步骤（带速度参数）。"""
         speed = self._move_speed_slider.value() / 100.0
-        full_label = f"{label} (速度{speed:.1f})"
+        full_label = tr("{label} (速度{speed})",
+                        label=label, speed=f"{speed:.1f}")
         self._add_step(ChoreoStep(
             action_type="move",
             api_id=0,
@@ -1063,7 +1080,7 @@ class ChoreoEditorDialog(QDialog):
         ))
 
     def _build_step_list_panel(self) -> QWidget:
-        grp = QGroupBox("当前角色步骤列表")
+        grp = QGroupBox(tr("当前角色步骤列表"))
         v   = QVBoxLayout(grp)
         v.setContentsMargins(6, 10, 6, 6)
         v.setSpacing(6)
@@ -1074,9 +1091,9 @@ class ChoreoEditorDialog(QDialog):
 
         # 上/下/删除
         ctrl = QHBoxLayout()
-        up_btn  = QPushButton("↑ 上移")
-        dn_btn  = QPushButton("↓ 下移")
-        del_btn = QPushButton("✕ 删除")
+        up_btn  = QPushButton(tr("↑ 上移"))
+        dn_btn  = QPushButton(tr("↓ 下移"))
+        del_btn = QPushButton(tr("✕ 删除"))
         for b in (up_btn, dn_btn):
             b.setStyleSheet(_BTN)
             b.setFixedHeight(28)
@@ -1093,14 +1110,14 @@ class ChoreoEditorDialog(QDialog):
 
         # 修改时长
         dur_row = QHBoxLayout()
-        dur_row.addWidget(QLabel("修改时长："))
+        dur_row.addWidget(QLabel(tr("修改时长：")))
         self._step_dur_spin = QDoubleSpinBox()
         self._step_dur_spin.setRange(0.2, 60.0)
         self._step_dur_spin.setSingleStep(0.5)
         self._step_dur_spin.setDecimals(1)
         self._step_dur_spin.setSuffix(" s")
         self._step_dur_spin.setFixedWidth(90)
-        apply_btn = QPushButton("应用")
+        apply_btn = QPushButton(tr("应用"))
         apply_btn.setStyleSheet(_PRIMARY)
         apply_btn.setFixedHeight(28)
         apply_btn.clicked.connect(self._apply_step_dur)
@@ -1132,9 +1149,9 @@ class ChoreoEditorDialog(QDialog):
         track = self._script.tracks[idx]
         if track.steps:
             ret = QMessageBox.question(
-                self, "确认删除",
-                f"{track.role_name} 有 {len(track.steps)} 个步骤，"
-                f"删除后这些步骤会一并丢失，确定吗？",
+                self, tr("确认删除"),
+                tr("{role} 有 {n} 个步骤，删除后这些步骤会一并丢失，确定吗？",
+                   role=track.role_name, n=len(track.steps)),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
             if ret != QMessageBox.StandardButton.Yes:
                 return
@@ -1158,8 +1175,8 @@ class ChoreoEditorDialog(QDialog):
                 robots = []
         if self._script.has_any_steps():
             ret = QMessageBox.question(
-                self, "确认重置",
-                "将清空当前所有轨道和步骤，按设备列表重新生成空轨道，确定吗？",
+                self, tr("确认重置"),
+                tr("将清空当前所有轨道和步骤，按设备列表重新生成空轨道，确定吗？"),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
             if ret != QMessageBox.StandardButton.Yes:
                 return
@@ -1204,18 +1221,18 @@ class ChoreoEditorDialog(QDialog):
             tabs.removeTab(0)
 
         # 移动/旋转 始终显示
-        tabs.addTab(self._move_tab, "移动")
+        tabs.addTab(self._move_tab, tr("移动"))
 
         if (0 <= self._sel_track_idx < len(self._script.tracks)):
             rtype = self._script.tracks[self._sel_track_idx].robot_type
             if rtype == ROBOT_TYPE_GO2:
-                tabs.addTab(self._go2_tab, "Go2 动作")
+                tabs.addTab(self._go2_tab, tr("Go2 动作"))
             else:
-                tabs.addTab(self._g1_tab, "G1 动作")
+                tabs.addTab(self._g1_tab, tr("G1 动作"))
         else:
             # 未选中轨道时显示全部
-            tabs.addTab(self._go2_tab, "Go2 动作")
-            tabs.addTab(self._g1_tab,  "G1 动作")
+            tabs.addTab(self._go2_tab, tr("Go2 动作"))
+            tabs.addTab(self._g1_tab,  tr("G1 动作"))
 
         # 尝试恢复之前选中的 tab
         for i in range(tabs.count()):
@@ -1228,7 +1245,7 @@ class ChoreoEditorDialog(QDialog):
     def _add_step(self, step: ChoreoStep):
         if (self._sel_track_idx < 0 or
                 self._sel_track_idx >= len(self._script.tracks)):
-            QMessageBox.warning(self, "提示", "请先在左侧选择一个角色")
+            QMessageBox.warning(self, tr("提示"), tr("请先在左侧选择一个角色"))
             return
         track = self._script.tracks[self._sel_track_idx]
         track.steps.append(step)
@@ -1318,17 +1335,19 @@ class ChoreoEditorDialog(QDialog):
             # 缩短会导致编排时间线和实际动作不同步。
             std = get_fixed_duration_ms(step.action_type, step.api_id)
             if std is not None and new_dur < std:
-                type_label = {
+                type_label = tr({
                     "sport":   "sport",
                     "arm":     "G1 手臂",
                     "g1_mode": "G1 运动模式",
-                }.get(step.action_type, step.action_type)
+                }.get(step.action_type, step.action_type))
                 ret = QMessageBox.warning(
-                    self, "时长过短",
-                    f"该 {type_label} 动作的标准时长为 {std / 1000:.0f}s。\n"
-                    f"缩短到 {new_dur / 1000:.1f}s 会导致动作还没跑完"
-                    f"就开始下一步，造成时间线与实际不同步。\n\n"
-                    f"确定要缩短吗？",
+                    self, tr("时长过短"),
+                    tr("该 {type} 动作的标准时长为 {std}s。\n"
+                       "缩短到 {new}s 会导致动作还没跑完就开始下一步，"
+                       "造成时间线与实际不同步。\n\n确定要缩短吗？",
+                       type=type_label,
+                       std=f"{std / 1000:.0f}",
+                       new=f"{new_dur / 1000:.1f}"),
                     QMessageBox.StandardButton.Yes |
                     QMessageBox.StandardButton.No)
                 if ret != QMessageBox.StandardButton.Yes:
@@ -1336,7 +1355,7 @@ class ChoreoEditorDialog(QDialog):
 
             step.duration_ms = new_dur
             step.label = (
-                f"等待 {step.duration_ms / 1000:.1f}s"
+                tr("等待 {s}s", s=f"{step.duration_ms / 1000:.1f}")
                 if step.action_type == "wait"
                 else step.label)
             self._refresh_step_list()
@@ -1346,23 +1365,23 @@ class ChoreoEditorDialog(QDialog):
 
     def _on_save(self):
         if not self._script.tracks:
-            QMessageBox.warning(self, "提示", "编排为空，请先添加角色和步骤")
+            QMessageBox.warning(self, tr("提示"), tr("编排为空，请先添加角色和步骤"))
             return
         # 警告：整个脚本没有任何步骤 —— 保存了也无法播放
         if not self._script.has_any_steps():
             ret = QMessageBox.question(
-                self, "编排为空",
-                "当前编排的所有轨道都没有任何步骤，保存后也无法播放。\n"
-                "确定要保存这个空编排吗？",
+                self, tr("编排为空"),
+                tr("当前编排的所有轨道都没有任何步骤，保存后也无法播放。\n"
+                   "确定要保存这个空编排吗？"),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
             if ret != QMessageBox.StandardButton.Yes:
                 return
-        self._script.name = self._name_edit.text().strip() or "新编排"
+        self._script.name = self._name_edit.text().strip() or tr("新编排")
         # 默认保存到 choreo_auto/ 目录；文件名需要去掉非法字符
         safe_name = _sanitize_filename(self._script.name)
         default_path = os.path.join(CHOREO_AUTO_DIR, f"{safe_name}.json")
         path, _ = QFileDialog.getSaveFileName(
-            self, "保存编排", default_path,
+            self, tr("保存编排"), default_path,
             "Choreography JSON (*.json)")
         if not path:
             return
@@ -1371,14 +1390,15 @@ class ChoreoEditorDialog(QDialog):
             self._is_dirty = False
             self._mgr.log_user_action("保存编排", path)
             QMessageBox.information(
-                self, "保存成功",
-                f"已保存：\n{path}\n\n（choreo_auto/ 目录中的文件可从主界面直接加载播放）")
+                self, tr("保存成功"),
+                tr("已保存：\n{path}\n\n（choreo_auto/ 目录中的文件可从主界面直接加载播放）",
+                   path=path))
         except Exception as e:
-            QMessageBox.critical(self, "保存失败", str(e))
+            QMessageBox.critical(self, tr("保存失败"), str(e))
 
     def _on_load(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, "加载编排", CHOREO_AUTO_DIR,
+            self, tr("加载编排"), CHOREO_AUTO_DIR,
             "Choreography JSON (*.json)")
         if not path:
             return
@@ -1393,26 +1413,26 @@ class ChoreoEditorDialog(QDialog):
             self._is_dirty = False
             self._mgr.log_user_action("加载编排", path)
         except Exception as e:
-            QMessageBox.critical(self, "加载失败", str(e))
+            QMessageBox.critical(self, tr("加载失败"), str(e))
 
     def _on_append_script(self):
         """并行追加：选一个外部 JSON，把它的每条轨道作为新的独立轨道
         加到当前编排下方。追加后轨道数 = 原数量 + 被加编排的轨道数，
         所有轨道从 t=0 同时播放。例：2 条狗 + 另 1 条狗 = 3 条狗并行。"""
         path, _ = QFileDialog.getOpenFileName(
-            self, "选择要并行追加的编排 JSON",
+            self, tr("选择要并行追加的编排 JSON"),
             CHOREO_AUTO_DIR, "Choreography JSON (*.json)")
         if not path:
             return
         try:
             other = ChoreoScript.load(path)
         except Exception as e:
-            QMessageBox.critical(self, "加载失败", str(e))
+            QMessageBox.critical(self, tr("加载失败"), str(e))
             return
         if not other.tracks:
             QMessageBox.information(
-                self, "无可追加内容",
-                "待追加的编排里没有任何轨道。")
+                self, tr("无可追加内容"),
+                tr("待追加的编排里没有任何轨道。"))
             return
 
         before_n = len(self._script.tracks)
@@ -1432,18 +1452,21 @@ class ChoreoEditorDialog(QDialog):
             "并行追加编排：%s  轨道数 %d → %d，总时长 %.1fs → %.1fs",
             path, before_n, after_n, before_total / 1000, after_total / 1000)
         QMessageBox.information(
-            self, "追加成功",
-            f"已把《{other.name}》以并行方式追加为新轨道。\n"
-            f"轨道数：{before_n} → {after_n}\n"
-            f"总时长：{before_total / 1000:.1f}s  →  {after_total / 1000:.1f}s\n\n"
-            f"⚠ 播放时设备列表必须有至少 {after_n} 个机器人，"
-            f"且每个位置的类型要匹配，否则请先在设备列表中补齐/换位。")
+            self, tr("追加成功"),
+            tr("已把《{name}》以并行方式追加为新轨道。\n"
+               "轨道数：{a} → {b}\n"
+               "总时长：{ta}s  →  {tb}s\n\n"
+               "⚠ 播放时设备列表必须有至少 {b} 个机器人，"
+               "且每个位置的类型要匹配，否则请先在设备列表中补齐/换位。",
+               name=other.name, a=before_n, b=after_n,
+               ta=f"{before_total / 1000:.1f}",
+               tb=f"{after_total / 1000:.1f}"))
 
     def _on_clear(self):
         if self._script.has_any_steps():
             if QMessageBox.question(
-                    self, "确认清空",
-                    "清空将删除所有步骤（保留轨道布局），确定吗？",
+                    self, tr("确认清空"),
+                    tr("清空将删除所有步骤（保留轨道布局），确定吗？"),
                     QMessageBox.StandardButton.Yes |
                     QMessageBox.StandardButton.No) != QMessageBox.StandardButton.Yes:
                 return
@@ -1457,10 +1480,10 @@ class ChoreoEditorDialog(QDialog):
 
     def _on_play(self):
         if not self._script.tracks:
-            QMessageBox.warning(self, "提示", "编排为空，请先在左侧添加机器人")
+            QMessageBox.warning(self, tr("提示"), tr("编排为空，请先在左侧添加机器人"))
             return
         if not self._script.has_any_steps():
-            QMessageBox.warning(self, "提示", "所有轨道都没有步骤，无法播放")
+            QMessageBox.warning(self, tr("提示"), tr("所有轨道都没有步骤，无法播放"))
             return
         robots: List[RobotInfo] = []
         if self._get_ordered_robots:
@@ -1470,7 +1493,7 @@ class ChoreoEditorDialog(QDialog):
                 robots = []
         ok, msg = check_script_compat(self._script, robots)
         if not ok:
-            QMessageBox.warning(self, "无法播放", msg)
+            QMessageBox.warning(self, tr("无法播放"), msg)
             return
         dlg = ChoreoPlayerDialog(self._script, self._mgr, robots, self)
         dlg.exec()
@@ -1483,8 +1506,8 @@ class ChoreoEditorDialog(QDialog):
         if not getattr(self, "_is_dirty", False):
             return True
         ret = QMessageBox.question(
-            self, "未保存的更改",
-            "当前编排有未保存的修改，直接关闭会丢失这些内容。\n\n确定要放弃修改并关闭吗？",
+            self, tr("未保存的更改"),
+            tr("当前编排有未保存的修改，直接关闭会丢失这些内容。\n\n确定要放弃修改并关闭吗？"),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         return ret == QMessageBox.StandardButton.Yes
 
@@ -1547,13 +1570,13 @@ class ChoreoPlayerDialog(QDialog):
         self._timer.setInterval(20)   # 20ms tick，提高播放时间精度
         self._timer.timeout.connect(self._tick)
 
-        self.setWindowTitle("编排播放器")
+        self.setWindowTitle(tr("编排播放器"))
         self.resize(720, 520)
         self.setMinimumSize(600, 420)
         self.setStyleSheet(_DIALOG_STYLE)
         self._build_ui()
         if not ok:
-            self._log(f"⚠ 布局不匹配：{msg}", "#f38ba8")
+            self._log(tr("⚠ 布局不匹配：{msg}", msg=msg), "#f38ba8")
 
     # ── UI ──────────────────────────────────────────────────
 
@@ -1564,16 +1587,17 @@ class ChoreoPlayerDialog(QDialog):
 
         # 剧本信息
         total_ms = self._script.total_duration_ms()
-        info = QLabel(
-            f"剧本：{self._script.name}  |  "
-            f"位置数：{len(self._script.tracks)}  |  "
-            f"总时长：{total_ms / 1000:.1f} 秒")
+        info = QLabel(tr(
+            "剧本：{name}  |  位置数：{n}  |  总时长：{s} 秒",
+            name=self._script.name,
+            n=len(self._script.tracks),
+            s=f"{total_ms / 1000:.1f}"))
         info.setStyleSheet("color: #89b4fa; font-size: 12px;")
         root.addWidget(info)
 
         # 位置映射表（只读）
-        map_grp  = QGroupBox(
-            "位置映射  —  编排轨道 #N  →  设备列表第 N 个机器人")
+        map_grp  = QGroupBox(tr(
+            "位置映射  —  编排轨道 #N  →  设备列表第 N 个机器人"))
         map_grid = QGridLayout(map_grp)
         map_grid.setSpacing(6)
         map_grid.setContentsMargins(10, 12, 10, 8)
@@ -1589,24 +1613,25 @@ class ChoreoPlayerDialog(QDialog):
                 icon = "🐕" if track.robot_type == ROBOT_TYPE_GO2 else "🤖"
                 left = (f"{icon}  {track.role_name}  "
                         f"[{track.robot_type.upper()}]  "
-                        f"{len(track.steps)} 步  →")
+                        + tr("{n} 步  →", n=len(track.steps)))
             else:
-                left = f"（编排无第 {ti + 1} 条轨道）  →"
+                left = tr("（编排无第 {i} 条轨道）  →", i=ti + 1)
 
             if robot is not None and track is not None:
                 match = (robot.robot_type == track.robot_type)
-                status = ("已连接" if robot.status == STATUS_CONNECTED
-                          else "未连接")
-                right = (f"第 {ti + 1} 个：{robot.name}  "
+                status = (tr("已连接") if robot.status == STATUS_CONNECTED
+                          else tr("未连接"))
+                right = (tr("第 {i} 个：", i=ti + 1) + f"{robot.name}  "
                          f"[{robot.robot_type.upper()}]  ({status})")
                 color = ("#a6e3a1" if match and robot.status == STATUS_CONNECTED
                          else ("#f9e2af" if match else "#f38ba8"))
             elif robot is not None:
-                right = (f"第 {ti + 1} 个：{robot.name}  "
-                         f"[{robot.robot_type.upper()}]  （编排无此轨道）")
+                right = (tr("第 {i} 个：", i=ti + 1) + f"{robot.name}  "
+                         f"[{robot.robot_type.upper()}]  "
+                         + tr("（编排无此轨道）"))
                 color = "#f38ba8"
             else:
-                right = f"（设备列表无第 {ti + 1} 个机器人）"
+                right = tr("（设备列表无第 {i} 个机器人）", i=ti + 1)
                 color = "#f38ba8"
 
             l_lbl = QLabel(left)
@@ -1626,7 +1651,7 @@ class ChoreoPlayerDialog(QDialog):
         root.addWidget(map_grp)
 
         # 进度条
-        prog_grp = QGroupBox("播放进度")
+        prog_grp = QGroupBox(tr("播放进度"))
         prog_v   = QVBoxLayout(prog_grp)
         prog_v.setContentsMargins(8, 8, 8, 8)
         self._progress = QProgressBar()
@@ -1639,9 +1664,9 @@ class ChoreoPlayerDialog(QDialog):
 
         # 控制按钮
         ctrl = QHBoxLayout()
-        self._play_btn  = QPushButton("▶  开始播放")
-        self._stop_btn  = QPushButton("⏹  停止")
-        self._estop_btn = QPushButton("🚨  全体紧急停止")
+        self._play_btn  = QPushButton(tr("▶  开始播放"))
+        self._stop_btn  = QPushButton(tr("⏹  停止"))
+        self._estop_btn = QPushButton(tr("🚨  全体紧急停止"))
 
         self._play_btn.setStyleSheet(_PRIMARY)
         self._stop_btn.setStyleSheet(_BTN)
@@ -1652,9 +1677,9 @@ class ChoreoPlayerDialog(QDialog):
         self._stop_btn.setEnabled(False)
         self._play_btn.setEnabled(self._compat_ok)
         if not self._compat_ok:
-            self._play_btn.setToolTip(
+            self._play_btn.setToolTip(tr(
                 "编排布局与当前设备列表不一致，无法开始播放。\n"
-                "请在「编排库」打开本编排，在编辑器中删除多余的空轨道后保存再试。")
+                "请在「编排库」打开本编排，在编辑器中删除多余的空轨道后保存再试。"))
         self._play_btn.clicked.connect(self._on_play)
         self._stop_btn.clicked.connect(self._on_stop)
         self._estop_btn.clicked.connect(self._on_emergency_stop)
@@ -1666,7 +1691,7 @@ class ChoreoPlayerDialog(QDialog):
         root.addLayout(ctrl)
 
         # 执行日志
-        log_grp = QGroupBox("执行日志")
+        log_grp = QGroupBox(tr("执行日志"))
         log_v   = QVBoxLayout(log_grp)
         log_v.setContentsMargins(4, 8, 4, 4)
         self._log_edit = QTextEdit()
@@ -1695,10 +1720,10 @@ class ChoreoPlayerDialog(QDialog):
         if self._playing:
             return
         if not self._compat_ok:
-            QMessageBox.warning(self, "无法播放", self._compat_msg)
+            QMessageBox.warning(self, tr("无法播放"), self._compat_msg)
             return
         if not self._build_event_list() or not self._events:
-            QMessageBox.warning(self, "提示", "编排中所有轨道都没有步骤。")
+            QMessageBox.warning(self, tr("提示"), tr("编排中所有轨道都没有步骤。"))
             return
 
         self._playing  = True
@@ -1713,7 +1738,7 @@ class ChoreoPlayerDialog(QDialog):
 
         self._progress.setValue(0)
         self._progress.setFormat(f"0.0s / {self._total_ms / 1000:.1f}s")
-        self._log("▶ 开始播放", "#a6e3a1")
+        self._log(tr("▶ 开始播放"), "#a6e3a1")
         self._mgr.log_user_action("编排开始播放", self._script.name)
         
         # 编排播放前：设置所有 Go2 为连续行走模式，支持摇杆控制
@@ -1741,7 +1766,7 @@ class ChoreoPlayerDialog(QDialog):
             set_playback_verbose_logging(False)
         except Exception:
             pass
-        self._log("⏹ 播放停止", "#f9e2af")
+        self._log(tr("⏹ 播放停止"), "#f9e2af")
         self._mgr.log_user_action("编排停止播放", self._script.name)
 
     def _stop_sport_commands(self):
@@ -1757,7 +1782,12 @@ class ChoreoPlayerDialog(QDialog):
             logger.warning("[choreo] 收尾停止失败: %s", e)
 
     def _on_emergency_stop(self):
-        """停止播放并向所有机器人发送紧急停止。"""
+        """停止播放并向所有机器人发送紧急停止。
+
+        Go2 部分安全，立即执行；G1 急停是切阻尼，走跑中被打断会直接摔倒，风险和
+        Go2 不是一个量级，弹二次确认，用户确认后才对 G1 发（不能像以前那样一个
+        emergency_stop_all 把两种机器人混在一起无脑发出去）。
+        """
         if self._playing:
             self._playing = False
             self._timer.stop()
@@ -1765,12 +1795,26 @@ class ChoreoPlayerDialog(QDialog):
             self._play_btn.setEnabled(self._compat_ok)
             self._stop_btn.setEnabled(False)
 
-        self._mgr.emergency_stop_all()
+        valid_ids = [rid for rid in self._role_robot_ids if rid is not None]
+        self._mgr.emergency_stop_go2(valid_ids)
+
+        g1_ids = self._mgr.g1_ids_among(valid_ids)
+        if g1_ids:
+            g1_names = [r.name for rid in g1_ids if (r := self._mgr.get_robot(rid))]
+            ret = QMessageBox.warning(
+                self, tr("⚠️ 确认对 G1 急停？"),
+                tr("G1 急停会立即切阻尼、腿部瞬间卸力——如果这时候正在走跑，会直接摔倒。\n"
+                   "这个场景没有实测验证过安全性，确定要继续吗？\n\n"
+                   "目标：{names}", names="、".join(g1_names)),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+            if ret == QMessageBox.StandardButton.Yes:
+                self._mgr.emergency_stop_g1(g1_ids)
+
         try:
             set_playback_verbose_logging(False)
         except Exception:
             pass
-        self._log("🚨 全体紧急停止！", "#f38ba8")
+        self._log(tr("🚨 全体紧急停止！"), "#f38ba8")
         self._mgr.log_user_action("编排紧急停止")
 
     def _tick(self):
@@ -1825,7 +1869,8 @@ class ChoreoPlayerDialog(QDialog):
         if not robot or robot.status != STATUS_CONNECTED:
             track = self._script.tracks[track_idx]
             self._log(
-                f"⚠ {track.role_name}：机器人未连接，跳过 [{step.label}]",
+                tr("⚠ {role}：机器人未连接，跳过 [{label}]",
+                   role=track.role_name, label=step.label),
                 "#f9e2af")
             return
         
@@ -1950,7 +1995,7 @@ class ChoreoPlayerDialog(QDialog):
             set_playback_verbose_logging(False)
         except Exception:
             pass
-        self._log("✅ 编排播放完成，已发送收尾停止+恢复站立", "#a6e3a1")
+        self._log(tr("✅ 编排播放完成，已发送收尾停止+恢复站立"), "#a6e3a1")
         self._mgr.log_user_action("编排播放完成", self._script.name)
 
     def _log(self, msg: str, color: str = "#a6adc8"):
@@ -1995,7 +2040,7 @@ class ChoreoLibraryDialog(QDialog):
         super().__init__(parent)
         self._mgr = manager
         self._get_ordered_robots = get_ordered_robots
-        self.setWindowTitle("编排库  —  choreo_auto/")
+        self.setWindowTitle(tr("编排库  —  choreo_auto/"))
         self.resize(760, 500)
         self.setMinimumSize(640, 380)
         self.setStyleSheet(_DIALOG_STYLE)
@@ -2018,7 +2063,7 @@ class ChoreoLibraryDialog(QDialog):
         root.setSpacing(8)
 
         # 目录提示
-        dir_lbl = QLabel(f"📂  扫描目录：{CHOREO_AUTO_DIR}")
+        dir_lbl = QLabel(tr("📂  扫描目录：{path}", path=CHOREO_AUTO_DIR))
         dir_lbl.setStyleSheet("color: #585b70; font-size: 11px;")
         root.addWidget(dir_lbl)
 
@@ -2041,10 +2086,10 @@ class ChoreoLibraryDialog(QDialog):
 
         # 控制按钮
         ctrl = QHBoxLayout()
-        refresh_btn = QPushButton("↺ 刷新")
-        self._play_btn  = QPushButton("▶  播放选中编排")
-        self._edit_btn  = QPushButton("✏ 在编辑器中打开")
-        open_dir_btn = QPushButton("📂 打开目录")
+        refresh_btn = QPushButton(tr("↺ 刷新"))
+        self._play_btn  = QPushButton(tr("▶  播放选中编排"))
+        self._edit_btn  = QPushButton(tr("✏ 在编辑器中打开"))
+        open_dir_btn = QPushButton(tr("📂 打开目录"))
 
         for b, s in ((refresh_btn, _BTN), (self._play_btn, _PRIMARY),
                      (self._edit_btn, _BTN), (open_dir_btn, _BTN)):
@@ -2078,17 +2123,17 @@ class ChoreoLibraryDialog(QDialog):
                 tag = "Go2" if r.robot_type == ROBOT_TYPE_GO2 else "G1"
                 layout_parts.append(f"#{i + 1}{tag}")
             self._conn_lbl.setText(
-                f"当前设备列表（按顺序）：{len(ordered)} 个 — "
+                tr("当前设备列表（按顺序）：{n} 个 — ", n=len(ordered))
                 + "  ".join(layout_parts))
         else:
-            self._conn_lbl.setText("当前设备列表为空")
+            self._conn_lbl.setText(tr("当前设备列表为空"))
 
         self._list.clear()
         self._scripts: List[Optional[ChoreoScript]] = []
 
         json_files = sorted(Path(CHOREO_AUTO_DIR).glob("*.json"))
         if not json_files:
-            item = QListWidgetItem("  （choreo_auto/ 目录为空，请先在编排编辑器中保存剧本）")
+            item = QListWidgetItem(tr("  （choreo_auto/ 目录为空，请先在编排编辑器中保存剧本）"))
             item.setForeground(QColor("#585b70"))
             item.setFlags(Qt.ItemFlag.NoItemFlags)
             self._list.addItem(item)
@@ -2099,7 +2144,8 @@ class ChoreoLibraryDialog(QDialog):
             try:
                 script = ChoreoScript.load(str(fpath))
             except Exception as e:
-                item = QListWidgetItem(f"  ⚠ {fpath.name}  （解析失败：{e}）")
+                item = QListWidgetItem(tr("  ⚠ {name}  （解析失败：{err}）",
+                                          name=fpath.name, err=e))
                 item.setForeground(QColor("#f38ba8"))
                 item.setFlags(Qt.ItemFlag.ItemIsEnabled)
                 self._list.addItem(item)
@@ -2108,12 +2154,12 @@ class ChoreoLibraryDialog(QDialog):
 
             total_s = script.total_duration_ms() / 1000
             ok, why = check_script_compat(script, ordered)
-            compat = "✅ 可播放" if ok else "⚠ 布局不匹配"
+            compat = tr("✅ 可播放") if ok else tr("⚠ 布局不匹配")
             compat_color = "#a6e3a1" if ok else "#f9e2af"
 
             text = (
                 f"{compat}   {script.name}"
-                f"   |   要求：{script.describe_layout()}"
+                f"   |   {tr('要求：')}{script.describe_layout()}"
                 f"   |   {total_s:.1f}s   |   {fpath.name}")
             item = QListWidgetItem(f"  {text}")
             item.setForeground(QColor(compat_color))
@@ -2146,7 +2192,7 @@ class ChoreoLibraryDialog(QDialog):
         ordered = self._current_ordered_robots()
         ok, msg = check_script_compat(script, ordered)
         if not ok:
-            QMessageBox.warning(self, "无法播放", msg)
+            QMessageBox.warning(self, tr("无法播放"), msg)
             return
         self._mgr.log_user_action("从库播放编排", script.name)
         dlg = ChoreoPlayerDialog(script, self._mgr, ordered, self)

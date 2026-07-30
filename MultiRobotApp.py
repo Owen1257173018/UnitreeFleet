@@ -44,8 +44,14 @@ _startup_logger = logging.getLogger("unitree.app")
 
 
 def main():
+    # 先初始化 i18n（读配置里的 language）—— 必须在 MainWindow 构造前
+    from backend import ConfigManager
+    import i18n
+    _cfg = ConfigManager()
+    i18n.set_language(_cfg.get_language())
+
     app = QApplication(sys.argv)
-    app.setApplicationName("Unitree 多机器人控制台")
+    app.setApplicationName("Unitree Fleet")
     app.setOrganizationName("Unitree")
     app.setOrganizationDomain("unitree.com")
 

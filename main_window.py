@@ -39,6 +39,7 @@ from backend import (
     SPORT_CMD,
 )
 from joystick import MovementButtonPanel, KeyboardMoveFilter
+from i18n import tr, get_language, set_language
 from dialogs import AddByIPDialog, AutoAddDialog, ConfirmDeleteDialog
 from choreography import (ChoreoEditorDialog, ChoreoLibraryDialog,
                           ChoreoScript, RecordingSession, CHOREO_AUTO_DIR,
@@ -184,13 +185,10 @@ def _make_status_dot(status: str, size: int = 10) -> QPixmap:
 # ──────────────────────────────────────────────────────────
 class RobotListItemWidget(QWidget):
     reconnectRequested = pyqtSignal(str)   # robot_id
-    callToggled        = pyqtSignal(str, bool)  # robot_id, want_active
 
     def __init__(self, robot: RobotInfo, parent=None):
         super().__init__(parent)
         self._robot_id = robot.id
-        self._is_go2 = robot.is_go2
-        self._call_active = False
         self._build(robot)
 
     def _build(self, robot: RobotInfo):
@@ -222,7 +220,7 @@ class RobotListItemWidget(QWidget):
         self._dot_lbl.setFixedWidth(12)
         row.addWidget(self._dot_lbl)
 
-        self._status_lbl = QLabel(_STATUS_TEXT[robot.status])
+        self._status_lbl = QLabel(tr(_STATUS_TEXT[robot.status]))
         self._status_lbl.setFixedWidth(52)
         self._status_lbl.setStyleSheet(
             f"color:{_STATUS_COLOR[robot.status]}; font-size:11px;")
@@ -231,7 +229,7 @@ class RobotListItemWidget(QWidget):
         # 每机器人独立重连按钮（仅在错误/断开时显示）
         self._recon_btn = QPushButton("↺")
         self._recon_btn.setFixedSize(26, 26)
-        self._recon_btn.setToolTip("重新连接此机器人")
+        self._recon_btn.setToolTip(tr("重新连接此机器人"))
         self._recon_btn.setStyleSheet("""
             QPushButton {
                 background: #1e3a5f; color: #89b4fa;
@@ -246,77 +244,20 @@ class RobotListItemWidget(QWidget):
         self._recon_btn.setVisible(False)
         row.addWidget(self._recon_btn)
 
-        # 通话按钮（仅 Go2；点击切换开/关）
-        self._call_btn = QPushButton("🎙")
-        self._call_btn.setFixedSize(26, 26)
-        self._call_btn.setToolTip("开启对讲")
-        self._call_btn.setCheckable(True)
-        self._call_btn.clicked.connect(self._on_call_clicked)
-        self._apply_call_btn_style(active=False)
-        # 只有 Go2 才显示此按钮；未连接时禁用
-        self._call_btn.setVisible(self._is_go2)
-        self._call_btn.setEnabled(False)
-        row.addWidget(self._call_btn)
-
         self.update_status(robot.status, robot.error_msg or "")
         if robot.battery is not None:
             self.update_battery(robot.battery)
 
-    _CALL_IDLE_STYLE = """
-        QPushButton {
-            background: #2a2a3e; color: #a6adc8;
-            border: 1px solid #45475a; border-radius: 4px;
-            font-size: 14px; padding: 0px;
-        }
-        QPushButton:hover:enabled   { background: #35354f; border-color: #cba6f7; }
-        QPushButton:pressed:enabled { background: #45455f; }
-        QPushButton:disabled        { background: #1e1e2e; color: #45475a;
-                                      border-color: #313244; }
-    """
-    _CALL_ACTIVE_STYLE = """
-        QPushButton {
-            background: #cba6f7; color: #1e1e2e;
-            border: 1px solid #cba6f7; border-radius: 4px;
-            font-size: 14px; font-weight: bold; padding: 0px;
-        }
-        QPushButton:hover { background: #b593ed; }
-    """
-
-    def _apply_call_btn_style(self, active: bool):
-        self._call_btn.setStyleSheet(
-            self._CALL_ACTIVE_STYLE if active else self._CALL_IDLE_STYLE)
-        self._call_btn.setToolTip("结束对讲" if active else "开启对讲")
-
-    def _on_call_clicked(self):
-        # 用户想要的目标状态（按钮 checkable，点了之后 isChecked 是 UI 意愿态）
-        want = self._call_btn.isChecked()
-        # 立刻回滚 UI 状态，等后端确认再刷新（避免 open 失败卡在错的态）
-        self._call_btn.setChecked(self._call_active)
-        self.callToggled.emit(self._robot_id, want)
-
-    def set_call_active(self, active: bool):
-        """由主窗口接收 audio_call_changed 信号后调用，同步 UI 与后端真实态。"""
-        self._call_active = active
-        self._call_btn.setChecked(active)
-        self._apply_call_btn_style(active)
-        # 通话中在名字前面塞一个 🎙 标记，方便一眼看到有哪几台在通话
-        base = self._name_lbl.text().lstrip("🎙 ").strip()
-        self._name_lbl.setText(f"🎙 {base}" if active else base)
-
     def update_status(self, status: str, error_msg: str = ""):
         color = _STATUS_COLOR.get(status, "#6c7086")
-        self.setToolTip(f"错误：{error_msg}"
+        self.setToolTip(tr("错误：{msg}", msg=error_msg)
                         if status == STATUS_ERROR and error_msg else "")
         self._dot_lbl.setPixmap(_make_status_dot(status))
-        self._status_lbl.setText(_STATUS_TEXT.get(status, status))
+        self._status_lbl.setText(tr(_STATUS_TEXT.get(status, status)))
         self._status_lbl.setStyleSheet(f"color:{color}; font-size:11px;")
         # 错误或断开时显示重连按钮
         is_bad = status in (STATUS_ERROR, STATUS_DISCONNECTED)
         self._recon_btn.setVisible(is_bad)
-        # 通话按钮：只有 Go2 + 已连接才允许点击；进入错误/断开时若 UI 还是 active，
-        # 由主窗口收到 audio_call_changed 信号统一置回 idle，不在这里改状态。
-        if hasattr(self, "_call_btn"):
-            self._call_btn.setEnabled(self._is_go2 and status == STATUS_CONNECTED)
 
     def update_battery(self, pct: int):
         color = "#a6e3a1" if pct > 20 else "#f9e2af" if pct > 10 else "#f38ba8"
@@ -367,7 +308,7 @@ class SaveConfigDialog(QDialog):
     def __init__(self, robots: List[dict], default_name: str = "",
                  existing_names: Optional[List[str]] = None, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("保存当前配置")
+        self.setWindowTitle(tr("保存当前配置"))
         self.setMinimumWidth(420)
         self.setStyleSheet(_CONFIG_DIALOG_STYLE)
         self._robots = robots
@@ -381,12 +322,13 @@ class SaveConfigDialog(QDialog):
         root.setContentsMargins(14, 14, 14, 14)
 
         if not self._robots:
-            empty = QLabel("当前机器人列表为空，请先添加再保存。")
+            empty = QLabel(tr("当前机器人列表为空，请先添加再保存。"))
             empty.setStyleSheet("color:#f9e2af; font-size:13px;")
             empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
             root.addWidget(empty)
         else:
-            hint = QLabel(f"将保存当前 {len(self._robots)} 台机器人的 IP / AES 密钥：")
+            hint = QLabel(tr("将保存当前 {n} 台机器人的 IP / AES 密钥：",
+                             n=len(self._robots)))
             hint.setStyleSheet("color:#a6adc8; font-size:12px;")
             root.addWidget(hint)
 
@@ -418,7 +360,7 @@ class SaveConfigDialog(QDialog):
 
                 row.addStretch()
 
-                key_lbl = QLabel("✓ 含密钥" if r.get("aes_128_key") else "无密钥")
+                key_lbl = QLabel(tr("✓ 含密钥") if r.get("aes_128_key") else tr("无密钥"))
                 key_lbl.setStyleSheet(
                     "color:#a6e3a1; font-size:11px;" if r.get("aes_128_key")
                     else "color:#585b70; font-size:11px;")
@@ -431,10 +373,10 @@ class SaveConfigDialog(QDialog):
             root.addWidget(scroll, 1)
 
         name_row = QHBoxLayout()
-        name_row.addWidget(QLabel("配置名称："))
+        name_row.addWidget(QLabel(tr("配置名称：")))
         self._name_edit = QLineEdit()
         self._name_edit.setText(default_name)
-        self._name_edit.setPlaceholderText("例：客厅3只 / 演出A组")
+        self._name_edit.setPlaceholderText(tr("例：客厅3只 / 演出A组"))
         name_row.addWidget(self._name_edit, 1)
         root.addLayout(name_row)
 
@@ -443,8 +385,8 @@ class SaveConfigDialog(QDialog):
         root.addWidget(self._hint_lbl)
 
         btn_row = QHBoxLayout()
-        cancel = QPushButton("取消")
-        ok_btn = QPushButton("保存")
+        cancel = QPushButton(tr("取消"))
+        ok_btn = QPushButton(tr("保存"))
         ok_btn.setObjectName("ok")
         ok_btn.setEnabled(bool(self._robots))
         cancel.clicked.connect(self.reject)
@@ -457,12 +399,12 @@ class SaveConfigDialog(QDialog):
     def _on_ok(self):
         name = self._name_edit.text().strip()
         if not name:
-            self._hint_lbl.setText("⚠ 请填写配置名称")
+            self._hint_lbl.setText(tr("⚠ 请填写配置名称"))
             return
         if name in self._existing:
             ret = QMessageBox.question(
-                self, "覆盖已有配置？",
-                f"配置「{name}」已存在，确定覆盖吗？",
+                self, tr("覆盖已有配置？"),
+                tr("配置「{name}」已存在，确定覆盖吗？", name=name),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
             if ret != QMessageBox.StandardButton.Yes:
                 return
@@ -481,7 +423,7 @@ class ConfigPickerDialog(QDialog):
 
     def __init__(self, config: ConfigManager, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("配置连接")
+        self.setWindowTitle(tr("配置连接"))
         self.setMinimumWidth(460)
         self.setMinimumHeight(360)
         self.setStyleSheet(_CONFIG_DIALOG_STYLE)
@@ -499,15 +441,15 @@ class ConfigPickerDialog(QDialog):
 
         saved = self._config.get_saved_configs()
         if not saved:
-            empty = QLabel(
+            empty = QLabel(tr(
                 "还没有保存任何配置。\n\n"
                 "先用 IP 添加 / 扫描添加把机器人加到列表，\n"
-                "再点「💾 保存配置」给当前列表取名保存。")
+                "再点「💾 保存配置」给当前列表取名保存。"))
             empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
             empty.setStyleSheet("color:#585b70; font-size:13px;")
             root.addWidget(empty, 1)
         else:
-            hint = QLabel(f"共 {len(saved)} 个配置，选择一个连接：")
+            hint = QLabel(tr("共 {n} 个配置，选择一个连接：", n=len(saved)))
             hint.setStyleSheet("color:#a6adc8; font-size:12px;")
             root.addWidget(hint)
 
@@ -529,8 +471,8 @@ class ConfigPickerDialog(QDialog):
                 self._radios[0][0].setChecked(True)
 
         btn_row = QHBoxLayout()
-        cancel = QPushButton("取消")
-        ok_btn = QPushButton("连接此配置")
+        cancel = QPushButton(tr("取消"))
+        ok_btn = QPushButton(tr("连接此配置"))
         ok_btn.setObjectName("ok")
         ok_btn.setEnabled(bool(self._radios))
         cancel.clicked.connect(self.reject)
@@ -560,13 +502,14 @@ class ConfigPickerDialog(QDialog):
 
         robots = cfg.get("robots", [])
         n_with_key = sum(1 for r in robots if r.get("aes_128_key"))
-        count_lbl = QLabel(f"{len(robots)} 台 · {n_with_key} 台含密钥")
+        count_lbl = QLabel(tr("{n} 台 · {k} 台含密钥",
+                              n=len(robots), k=n_with_key))
         count_lbl.setStyleSheet("color:#a6adc8; font-size:11px;")
         top.addWidget(count_lbl)
 
         top.addStretch()
 
-        del_btn = QPushButton("删除")
+        del_btn = QPushButton(tr("删除"))
         del_btn.setStyleSheet(
             "QPushButton{background:#3d2535;color:#f38ba8;"
             "border:1px solid #7d3545;border-radius:3px;"
@@ -581,12 +524,13 @@ class ConfigPickerDialog(QDialog):
 
         # 子行：机器人列表（紧凑）
         for r in robots:
+            key_str = tr("✓ 密钥") if r.get('aes_128_key') else tr("无密钥")
             sub = QLabel(
                 f"  · {'🐕' if r.get('robot_type') == ROBOT_TYPE_GO2 else '🤖'} "
                 f"{r.get('name', '?')}  "
                 f"<span style='color:#585b70;'>{r.get('ip') or r.get('sn') or '?'}</span>"
                 f"  <span style='color:{'#a6e3a1' if r.get('aes_128_key') else '#585b70'};font-size:10px;'>"
-                f"{'✓ 密钥' if r.get('aes_128_key') else '无密钥'}</span>")
+                f"{key_str}</span>")
             sub.setStyleSheet("color:#a6adc8; font-size:11px;")
             outer.addWidget(sub)
 
@@ -602,8 +546,8 @@ class ConfigPickerDialog(QDialog):
 
     def _delete_config(self, name: str, frame: QFrame, radio: QRadioButton):
         ret = QMessageBox.question(
-            self, "删除配置",
-            f"确定要删除配置「{name}」吗？此操作不可撤销。",
+            self, tr("删除配置"),
+            tr("确定要删除配置「{name}」吗？此操作不可撤销。", name=name),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         if ret != QMessageBox.StandardButton.Yes:
             return
@@ -619,7 +563,7 @@ class ConfigPickerDialog(QDialog):
                 self.selected_config = cfg
                 self.accept()
                 return
-        QMessageBox.information(self, "提示", "请选择一个配置。")
+        QMessageBox.information(self, tr("提示"), tr("请选择一个配置。"))
 
 
 # ──────────────────────────────────────────────────────────
@@ -751,39 +695,24 @@ class RobotListPanel(QWidget):
         header.setStyleSheet("background:#181825; border-bottom:1px solid #313244;")
         h_row = QHBoxLayout(header)
         h_row.setContentsMargins(10, 0, 10, 0)
-        title = QLabel("机器人列表")
+        title = QLabel(tr("机器人列表"))
         title.setStyleSheet("color:#cdd6f4; font-weight:bold; font-size:14px;")
         h_row.addWidget(title)
         h_row.addStretch()
 
-        # 全局对讲控制：麦克风静音切换 + 播放音量滑块。默认静音防止啸叫。
-        self._mic_btn = QPushButton("🎤")
-        self._mic_btn.setFixedSize(28, 24)
-        self._mic_btn.setCheckable(True)
-        self._mic_btn.setChecked(True)   # checked=muted
-        self._mic_btn.setToolTip("麦克风：静音（点击开启说话）")
-        self._mic_btn.setStyleSheet("""
-            QPushButton { background:#3d2535; color:#f38ba8;
-                          border:1px solid #7d3545; border-radius:4px;
-                          font-size:13px; padding:0px; }
-            QPushButton:checked { background:#3d2535; color:#f38ba8; }
-            QPushButton:!checked { background:#1e3a2a; color:#a6e3a1;
-                                   border-color:#3a6a4f; }
+        # 🌐 语言切换按钮：显示的是"对面"的语言（点了就切）
+        self._lang_btn = QPushButton(
+            "🌐 EN" if get_language() == "zh" else "🌐 中")
+        self._lang_btn.setFixedSize(52, 24)
+        self._lang_btn.setToolTip(tr("切换语言"))
+        self._lang_btn.setStyleSheet("""
+            QPushButton { background:#2a2a3e; color:#cdd6f4;
+                          border:1px solid #45475a; border-radius:4px;
+                          font-size:11px; padding:0px; }
             QPushButton:hover { border-color:#89b4fa; }
         """)
-        self._mic_btn.toggled.connect(self._on_mic_toggled)
-        h_row.addWidget(self._mic_btn)
-
-        vol_lbl = QLabel("🔊")
-        vol_lbl.setStyleSheet("color:#a6adc8; font-size:12px;")
-        h_row.addWidget(vol_lbl)
-        self._vol_slider = QSlider(Qt.Orientation.Horizontal)
-        self._vol_slider.setRange(0, 100)
-        self._vol_slider.setValue(60)
-        self._vol_slider.setFixedWidth(90)
-        self._vol_slider.setToolTip("对讲播放音量")
-        self._vol_slider.valueChanged.connect(self._on_volume_changed)
-        h_row.addWidget(self._vol_slider)
+        self._lang_btn.clicked.connect(self._on_lang_toggle)
+        h_row.addWidget(self._lang_btn)
 
         root.addWidget(header)
 
@@ -804,9 +733,9 @@ class RobotListPanel(QWidget):
         _BTN_H = 28
 
         # ── 第 1 行：IP 添加 / 保存配置 / 配置连接 ──
-        self._add_ip_btn   = QPushButton("＋ IP 添加")
-        self._save_cfg_btn = QPushButton("💾 保存配置")
-        self._saved_btn    = QPushButton("📂 配置连接")
+        self._add_ip_btn   = QPushButton(tr("＋ IP 添加"))
+        self._save_cfg_btn = QPushButton(tr("💾 保存配置"))
+        self._saved_btn    = QPushButton(tr("📂 配置连接"))
         self._add_ip_btn.setStyleSheet(_LIST_BTN)
         self._save_cfg_btn.setStyleSheet(_SAVE_BTN)
         self._saved_btn.setStyleSheet(_SAVE_BTN)
@@ -818,12 +747,12 @@ class RobotListPanel(QWidget):
 
         # ── 第 2 行：扫描添加 / 全选 / 删除（删除缩小到 1 列宽，比之前减半，
         # 避免误点；并且和上一排的「配置连接」对齐，视觉更整齐）──
-        self._auto_add_btn = QPushButton("📡 扫描添加")
-        self._sel_all_btn  = QPushButton("☑ 全选")
+        self._auto_add_btn = QPushButton(tr("📡 扫描添加"))
+        self._sel_all_btn  = QPushButton(tr("☑ 全选"))
         self._auto_add_btn.setStyleSheet(_LIST_BTN)
         self._sel_all_btn.setStyleSheet(_LIST_BTN)
         self._sel_all_btn.setEnabled(False)
-        self._del_btn = QPushButton("🗑 删除")
+        self._del_btn = QPushButton(tr("🗑 删除"))
         self._del_btn.setStyleSheet(
             _DANGER_BTN.replace("padding: 5px 10px", "padding: 3px 6px"))
         self._del_btn.setEnabled(False)
@@ -861,20 +790,20 @@ class RobotListPanel(QWidget):
             QPushButton:hover   { background: #8d2828; }
             QPushButton:pressed { background: #9d3030; }
         """
-        self._choreo_btn = QPushButton("🎬 编排")
+        self._choreo_btn = QPushButton(tr("🎬 编排"))
         self._choreo_btn.setStyleSheet(_CHOREO_STYLE)
-        self._choreo_btn.setToolTip(
-            "打开编排编辑器：为多个机器人设计动作时间线，保存到 choreo_auto/")
+        self._choreo_btn.setToolTip(tr(
+            "打开编排编辑器：为多个机器人设计动作时间线，保存到 choreo_auto/"))
 
-        self._lib_btn = QPushButton("📂 编排库")
+        self._lib_btn = QPushButton(tr("📂 编排库"))
         self._lib_btn.setStyleSheet(_CHOREO_STYLE)
-        self._lib_btn.setToolTip(
-            "扫描 choreo_auto/ 目录，选择兼容的编排直接播放")
+        self._lib_btn.setToolTip(tr(
+            "扫描 choreo_auto/ 目录，选择兼容的编排直接播放"))
 
-        self._rec_btn = QPushButton("⏺ 录制")
+        self._rec_btn = QPushButton(tr("⏺ 录制"))
         self._rec_btn.setStyleSheet(_REC_IDLE)
-        self._rec_btn.setToolTip(
-            "开始录制：记录对所有机器人的操作，停止后保存为可回放的 JSON 文件")
+        self._rec_btn.setToolTip(tr(
+            "开始录制：记录对所有机器人的操作，停止后保存为可回放的 JSON 文件"))
         self._rec_btn._style_idle   = _REC_IDLE
         self._rec_btn._style_active = _REC_ACTIVE
 
@@ -957,17 +886,18 @@ class RobotListPanel(QWidget):
         connected     = [r for r in robot_infos if r.status == STATUS_CONNECTED]
 
         if not robot_infos:
-            QMessageBox.warning(self, "无法录制", "列表中没有机器人，请先添加并连接机器人。")
+            QMessageBox.warning(self, tr("无法录制"),
+                                tr("列表中没有机器人，请先添加并连接机器人。"))
             return
         if not connected:
-            QMessageBox.warning(self, "注意",
-                                "当前没有已连接的机器人。录制会记录设备列表的布局，"
-                                "但至少需要连接一台机器人才能实际捕获动作。\n\n"
-                                "录制已开始，连接机器人后的操作将被记录。")
+            QMessageBox.warning(self, tr("注意"), tr(
+                "当前没有已连接的机器人。录制会记录设备列表的布局，"
+                "但至少需要连接一台机器人才能实际捕获动作。\n\n"
+                "录制已开始，连接机器人后的操作将被记录。"))
 
         self._recording = RecordingSession(robot_infos)
         self._mgr.set_recording_hook(self._recording.on_event)
-        self._rec_btn.setText("⏹ 停止录制")
+        self._rec_btn.setText(tr("⏹ 停止录制"))
         self._rec_btn.setStyleSheet(self._rec_btn._style_active)
         # 录制期间禁用编排/编排库，防止同时播放编排导致录制内容混乱
         self._choreo_btn.setEnabled(False)
@@ -982,7 +912,7 @@ class RobotListPanel(QWidget):
         self._mgr.clear_recording_hook()
         self._recording.flush_joystick()
 
-        self._rec_btn.setText("⏺ 录制")
+        self._rec_btn.setText(tr("⏺ 录制"))
         self._rec_btn.setStyleSheet(self._rec_btn._style_idle)
         self._choreo_btn.setEnabled(True)
         self._lib_btn.setEnabled(True)
@@ -994,9 +924,9 @@ class RobotListPanel(QWidget):
         if not script.has_any_steps():
             logger.info("[录制] 录制内容为空，跳过保存")
             QMessageBox.information(
-                self, "录制为空",
+                self, tr("录制为空"), tr(
                 "录制期间没有捕获到任何操作，未保存文件。\n"
-                "请确认在录制期间有对机器人执行动作（移动、sport 指令等）。")
+                "请确认在录制期间有对机器人执行动作（移动、sport 指令等）。"))
             return
 
         # 保存（名字做一次过滤，防止里面的非法字符影响文件名或逃出目录）
@@ -1005,15 +935,15 @@ class RobotListPanel(QWidget):
         try:
             script.save(save_path)
         except Exception as e:
-            QMessageBox.critical(self, "保存失败", str(e))
+            QMessageBox.critical(self, tr("保存失败"), str(e))
             return
 
         logger.info("[录制] 录制完成，已保存：%s", save_path)
 
         box = QMessageBox(self)
-        box.setWindowTitle("录制完成")
-        box.setText(f"录制已保存：\n{save_path}")
-        box.setInformativeText("是否立即在编排编辑器中打开以查看或继续编辑？")
+        box.setWindowTitle(tr("录制完成"))
+        box.setText(tr("录制已保存：\n{path}", path=save_path))
+        box.setInformativeText(tr("是否立即在编排编辑器中打开以查看或继续编辑？"))
         box.setStandardButtons(
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         box.setDefaultButton(QMessageBox.StandardButton.Yes)
@@ -1033,7 +963,6 @@ class RobotListPanel(QWidget):
         m.robot_battery_updated.connect(self._on_battery_updated)
         m.scan_progress.connect(self._on_scan_progress)
         m.scan_finished.connect(self._on_scan_finished)
-        m.audio_call_changed.connect(self._on_call_state_changed)
 
     def _on_robot_added(self, robot_id: str):
         robot = self._mgr.get_robot(robot_id)
@@ -1042,7 +971,6 @@ class RobotListPanel(QWidget):
         item   = QListWidgetItem()
         widget = RobotListItemWidget(robot)
         widget.reconnectRequested.connect(self._on_item_reconnect)
-        widget.callToggled.connect(self._on_call_toggled)
         item.setSizeHint(QSize(0, 50))
         item.setData(Qt.ItemDataRole.UserRole, robot_id)
         self._list.addItem(item)
@@ -1050,27 +978,6 @@ class RobotListPanel(QWidget):
         self._item_map[robot_id] = item
         self._widget_map[robot_id] = widget
         self._update_sel_all_btn()
-
-    def _on_call_toggled(self, robot_id: str, want_active: bool):
-        if want_active:
-            self._mgr.start_call(robot_id)
-        else:
-            self._mgr.stop_call(robot_id)
-
-    def _on_call_state_changed(self, robot_id: str, active: bool):
-        w = self._widget_map.get(robot_id)
-        if w is not None:
-            w.set_call_active(active)
-
-    def _on_mic_toggled(self, muted: bool):
-        # 按钮 checked=muted（默认静音，按下来释放）
-        self._mgr.set_mic_muted(muted)
-        self._mic_btn.setToolTip(
-            "麦克风：静音（点击开启说话）" if muted
-            else "麦克风：开启（点击静音）")
-
-    def _on_volume_changed(self, val: int):
-        self._mgr.set_playback_volume(val / 100.0)
 
     def _on_order_changed(self):
         """拖拽排序后 Qt 会清掉 setItemWidget，重新绑定所有条目的 widget。
@@ -1145,18 +1052,33 @@ class RobotListPanel(QWidget):
         self._sel_all_btn.setEnabled(total > 0)
         # 全选按钮文字随实时状态更新
         if total > 0 and len(sel) == total:
-            self._sel_all_btn.setText("☐ 取消全选")
+            self._sel_all_btn.setText(tr("☐ 全不选"))
         else:
-            self._sel_all_btn.setText("☑ 全选")
+            self._sel_all_btn.setText(tr("☑ 全选"))
         # 计数标签
         if has_sel:
-            self._sel_count_lbl.setText(f"已选 {len(sel)} / {total}")
+            self._sel_count_lbl.setText(tr("已选 {n} / {t}", n=len(sel), t=total))
         else:
             self._sel_count_lbl.setText("")
         self._emit_selection()
 
     def _update_sel_all_btn(self):
         self._sel_all_btn.setEnabled(self._list.count() > 0)
+
+    def _on_lang_toggle(self):
+        cur = get_language()
+        new = "en" if cur == "zh" else "zh"
+        set_language(new)
+        self._config.set_language(new)
+        # 静态 QLabel/QPushButton 的 text 大多在构造时写入，热替换代价高，
+        # 让用户重启：给个明确提示，不强制退出。
+        ret = QMessageBox.question(
+            self, tr("切换语言"),
+            tr("语言已切换。") + "\n" + tr("重启后完全生效。") + "\n\n"
+            + tr("现在退出？"),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        if ret == QMessageBox.StandardButton.Yes:
+            QApplication.instance().quit()
 
     def _emit_selection(self):
         self.selectionChanged.emit(self._selected_ids())
@@ -1177,12 +1099,12 @@ class RobotListPanel(QWidget):
             # 全部已选 → 取消全选
             logger.info("[用户操作] 取消全选")
             self._list.clearSelection()
-            self._sel_all_btn.setText("☑ 全选")
+            self._sel_all_btn.setText(tr("☑ 全选"))
         else:
             # 否则全选
             logger.info("[用户操作] 全选 (%d 台)", total)
             self._list.selectAll()
-            self._sel_all_btn.setText("☐ 取消全选")
+            self._sel_all_btn.setText(tr("☐ 全不选"))
 
     # ── 按钮处理 ──
 
@@ -1234,15 +1156,16 @@ class RobotListPanel(QWidget):
                 aes_128_key=robot.aes_128_key or "",
             ))
         if not snapshot:
-            QMessageBox.information(self, "提示",
-                "当前机器人列表为空，请先添加机器人再保存配置。")
+            QMessageBox.information(self, tr("提示"),
+                tr("当前机器人列表为空，请先添加机器人再保存配置。"))
             return
         existing = [c.get("name", "") for c in self._config.get_saved_configs()]
         dlg = SaveConfigDialog(snapshot, existing_names=existing, parent=self)
         if dlg.exec() and dlg.config_name:
             self._config.save_config(dlg.config_name, snapshot)
-            QMessageBox.information(self, "已保存",
-                f"配置「{dlg.config_name}」已保存（{len(snapshot)} 台机器人）。")
+            QMessageBox.information(self, tr("已保存"),
+                tr("配置「{name}」已保存（{n} 台机器人）。",
+                   name=dlg.config_name, n=len(snapshot)))
 
     def _on_config_connect(self):
         """从已保存的配置中选一个，遍历其中的 (ip, aes_128_key) 全部连接。"""
@@ -1308,7 +1231,7 @@ class RobotListPanel(QWidget):
             return
 
         menu = QMenu(self)
-        edit_aes = menu.addAction("🔑 编辑 AES 密钥（新固件）…")
+        edit_aes = menu.addAction(tr("🔑 编辑 AES 密钥（新固件）…"))
         chosen = menu.exec(self._list.viewport().mapToGlobal(pos))
         if chosen is edit_aes:
             self._edit_aes_key(robot)
@@ -1316,9 +1239,9 @@ class RobotListPanel(QWidget):
     def _edit_aes_key(self, robot: RobotInfo):
         from dialogs import UnitreeCloudLoginDialog
         if not robot.sn:
-            QMessageBox.information(self, "需要 SN",
+            QMessageBox.information(self, tr("需要 SN"), tr(
                 "此机器人没有 SN，无法从云端拉取 AES 密钥。"
-                "请先删除后用「IP 添加」重新创建并填写 SN。")
+                "请先删除后用「IP 添加」重新创建并填写 SN。"))
             return
         dlg = UnitreeCloudLoginDialog(
             sn=robot.sn, robot_type=robot.robot_type,
@@ -1328,8 +1251,8 @@ class RobotListPanel(QWidget):
             if robot.cfg_id:
                 self._config.update_saved_robot_aes_key(
                     robot.cfg_id, dlg.fetched_key)
-            QMessageBox.information(self, "已更新",
-                "AES 密钥已更新，请尝试重新连接此机器人。")
+            QMessageBox.information(self, tr("已更新"),
+                tr("AES 密钥已更新，请尝试重新连接此机器人。"))
             logger.info("[用户操作] 已为 %s 更新 AES 密钥", robot.name)
 
 
@@ -1385,26 +1308,26 @@ class Go2ControlTab(QWidget):
             grid.setSpacing(5)
             grid.setContentsMargins(4, 4, 4, 4)
             for idx, (api_id, label) in enumerate(actions):
-                btn = ActionButton(label,
+                btn = ActionButton(tr(label),
                                    lambda a=api_id, lbl=label: self._send(a, lbl),
                                    log_label=label, manager=None)
                 grid.addWidget(btn, idx // 3, idx % 3)
-            tabs.addTab(page, category)
+            tabs.addTab(page, tr(category))
         root.addWidget(tabs)
 
         # 高级设置
-        adv = QGroupBox("高级设置")
+        adv = QGroupBox(tr("高级设置"))
         adv_v = QVBoxLayout(adv)
         adv_v.setSpacing(6)
 
         # LED 颜色
         color_row = QHBoxLayout()
-        color_row.addWidget(QLabel("LED 颜色："))
+        color_row.addWidget(QLabel(tr("LED 颜色：")))
         self._color_combo = QComboBox()
         for c, lbl in VUI_COLORS:
-            self._color_combo.addItem(lbl, c)
+            self._color_combo.addItem(tr(lbl), c)
         self._color_combo.setFixedWidth(70)
-        set_color_btn = QPushButton("设置")
+        set_color_btn = QPushButton(tr("设置"))
         set_color_btn.setStyleSheet(_PRIMARY_BTN)
         set_color_btn.setFixedWidth(56)
         set_color_btn.clicked.connect(self._set_color)
@@ -1415,7 +1338,7 @@ class Go2ControlTab(QWidget):
 
         # 亮度
         bright_row = QHBoxLayout()
-        bright_row.addWidget(QLabel("LED 亮度："))
+        bright_row.addWidget(QLabel(tr("LED 亮度：")))
         self._bright_slider = QSlider(Qt.Orientation.Horizontal)
         self._bright_slider.setRange(0, 10)
         self._bright_slider.setValue(5)
@@ -1424,7 +1347,7 @@ class Go2ControlTab(QWidget):
         self._bright_lbl.setFixedWidth(18)
         self._bright_slider.valueChanged.connect(
             lambda v: self._bright_lbl.setText(str(v)))
-        set_bright_btn = QPushButton("设置")
+        set_bright_btn = QPushButton(tr("设置"))
         set_bright_btn.setStyleSheet(_PRIMARY_BTN)
         set_bright_btn.setFixedWidth(56)
         set_bright_btn.clicked.connect(self._set_brightness)
@@ -1436,9 +1359,9 @@ class Go2ControlTab(QWidget):
 
         # 运动模式
         mode_row = QHBoxLayout()
-        mode_row.addWidget(QLabel("运动模式："))
-        normal_btn = QPushButton("普通")
-        ai_btn     = QPushButton("AI")
+        mode_row.addWidget(QLabel(tr("运动模式：")))
+        normal_btn = QPushButton(tr("普通"))
+        ai_btn     = QPushButton(tr("AI"))
         for b in (normal_btn, ai_btn):
             b.setStyleSheet(_PRIMARY_BTN)
             b.setFixedWidth(60)
@@ -1456,40 +1379,11 @@ class Go2ControlTab(QWidget):
         root.addWidget(adv)
 
         # ── 音乐播放 ──
-        music = QGroupBox("音乐播放")
+        music = QGroupBox(tr("音乐播放"))
         music_v = QVBoxLayout(music)
         music_v.setSpacing(6)
 
-        # 第一行：本地音乐直播（megaphone 模式）
-        stream_row = QHBoxLayout()
-        stream_lbl = QLabel("本地音乐：")
-        stream_lbl.setStyleSheet("color:#a6adc8; font-size:12px;")
-        stream_lbl.setFixedWidth(60)
-        self._stream_file_lbl = QLabel("未选择文件")
-        self._stream_file_lbl.setStyleSheet(
-            "color:#585b70; font-size:11px; background:#181825; "
-            "border:1px solid #313244; border-radius:3px; padding:2px 6px;")
-        self._stream_file_lbl.setMinimumWidth(120)
-        self._stream_select_btn = QPushButton("选择文件")
-        self._stream_select_btn.setStyleSheet(_PRIMARY_BTN)
-        self._stream_select_btn.setFixedWidth(70)
-        self._stream_select_btn.clicked.connect(self._select_stream_file)
-        self._stream_play_btn = QPushButton("▶ 播放")
-        self._stream_play_btn.setStyleSheet(_PRIMARY_BTN)
-        self._stream_play_btn.setFixedWidth(56)
-        self._stream_play_btn.clicked.connect(self._stream_play)
-        self._stream_stop_btn = QPushButton("■ 停止")
-        self._stream_stop_btn.setStyleSheet(_PRIMARY_BTN)
-        self._stream_stop_btn.setFixedWidth(56)
-        self._stream_stop_btn.clicked.connect(self._stream_stop)
-        stream_row.addWidget(stream_lbl)
-        stream_row.addWidget(self._stream_file_lbl, 1)
-        stream_row.addWidget(self._stream_select_btn)
-        stream_row.addWidget(self._stream_play_btn)
-        stream_row.addWidget(self._stream_stop_btn)
-        music_v.addLayout(stream_row)
-
-        # 进度条（流式播放 + 上传共用）
+        # 进度条（音频上传用）
         self._upload_bar = QProgressBar()
         self._upload_bar.setFixedHeight(16)
         self._upload_bar.setVisible(False)
@@ -1499,33 +1393,25 @@ class Go2ControlTab(QWidget):
             "QProgressBar::chunk { background:#89b4fa; border-radius:3px; }")
         music_v.addWidget(self._upload_bar)
 
-        self._stream_file_path: str = ""
-
-        # 分隔线
-        sep = QFrame()
-        sep.setFrameShape(QFrame.Shape.HLine)
-        sep.setStyleSheet("color:#313244;")
-        music_v.addWidget(sep)
-
-        # 第二行：机器人内置音频（AudioHub）
-        hub_lbl = QLabel("机器人内置音频：")
+        # 机器人内置音频（AudioHub）
+        hub_lbl = QLabel(tr("机器人内置音频："))
         hub_lbl.setStyleSheet("color:#a6adc8; font-size:12px;")
         music_v.addWidget(hub_lbl)
 
         ctrl_row = QHBoxLayout()
-        self._music_refresh_btn = QPushButton("刷新列表")
+        self._music_refresh_btn = QPushButton(tr("刷新列表"))
         self._music_refresh_btn.setStyleSheet(_PRIMARY_BTN)
         self._music_refresh_btn.clicked.connect(self._refresh_audio_list)
-        self._music_play_btn = QPushButton("▶ 播放")
+        self._music_play_btn = QPushButton(tr("▶ 播放"))
         self._music_play_btn.setStyleSheet(_PRIMARY_BTN)
         self._music_play_btn.clicked.connect(self._play_selected_audio)
-        self._music_pause_btn = QPushButton("⏸ 暂停")
+        self._music_pause_btn = QPushButton(tr("⏸ 暂停"))
         self._music_pause_btn.setStyleSheet(_PRIMARY_BTN)
         self._music_pause_btn.clicked.connect(self._pause_audio)
-        self._music_resume_btn = QPushButton("⏵ 继续")
+        self._music_resume_btn = QPushButton(tr("⏵ 继续"))
         self._music_resume_btn.setStyleSheet(_PRIMARY_BTN)
         self._music_resume_btn.clicked.connect(self._resume_audio)
-        self._music_upload_btn = QPushButton("上传")
+        self._music_upload_btn = QPushButton(tr("上传"))
         self._music_upload_btn.setStyleSheet(_PRIMARY_BTN)
         self._music_upload_btn.clicked.connect(self._upload_audio)
         ctrl_row.addWidget(self._music_refresh_btn)
@@ -1569,14 +1455,14 @@ class Go2ControlTab(QWidget):
             return
         self._audio_list_widget.clear()
         self._audio_items.clear()
-        self._audio_list_widget.addItem("正在加载…")
+        self._audio_list_widget.addItem(tr("正在加载…"))
         self._mgr.fetch_audio_list(self._robot_ids[0])
 
     def _on_audio_list_result(self, robot_id: str, items: list):
         self._audio_list_widget.clear()
         self._audio_items = items
         if not items:
-            self._audio_list_widget.addItem("（无音频文件）")
+            self._audio_list_widget.addItem(tr("（无音频文件）"))
             return
         for item in items:
             self._audio_list_widget.addItem(item["name"])
@@ -1605,51 +1491,14 @@ class Go2ControlTab(QWidget):
         self._mgr.log_user_action("Go2 恢复音频", f"目标={self._robot_ids}")
         self._mgr.resume_audio(self._robot_ids)
 
-    # ── 本地音乐流式播放 ──
-
-    def _select_stream_file(self):
-        path, _ = QFileDialog.getOpenFileName(
-            self, "选择音频文件", "",
-            "音频文件 (*.mp3 *.wav *.flac *.ogg);;所有文件 (*)")
-        if not path:
-            return
-        self._stream_file_path = path
-        self._stream_file_lbl.setText(os.path.basename(path))
-        self._stream_file_lbl.setStyleSheet(
-            "color:#cdd6f4; font-size:11px; background:#181825; "
-            "border:1px solid #313244; border-radius:3px; padding:2px 6px;")
-
-    def _stream_play(self):
-        if not self._robot_ids:
-            return
-        if not self._stream_file_path:
-            self._select_stream_file()
-            if not self._stream_file_path:
-                return
-        self._upload_bar.setValue(0)
-        self._upload_bar.setVisible(True)
-        self._stream_play_btn.setEnabled(False)
-        name = os.path.basename(self._stream_file_path)
-        self._mgr.log_user_action(
-            f"Go2 流式播放 [{name}]", f"目标={self._robot_ids}")
-        self._mgr.stream_audio_file(self._robot_ids, self._stream_file_path)
-
-    def _stream_stop(self):
-        if not self._robot_ids:
-            return
-        self._mgr.log_user_action("Go2 停止音频流", f"目标={self._robot_ids}")
-        self._mgr.stop_stream_audio(self._robot_ids)
-        self._upload_bar.setVisible(False)
-        self._stream_play_btn.setEnabled(True)
-
     # ── 机器人内置音频上传 ──
 
     def _upload_audio(self):
         if not self._robot_ids:
             return
         path, _ = QFileDialog.getOpenFileName(
-            self, "选择音频文件", "",
-            "音频文件 (*.mp3 *.wav);;MP3 (*.mp3);;WAV (*.wav)")
+            self, tr("选择音频文件"), "",
+            tr("音频文件 (*.mp3 *.wav);;MP3 (*.mp3);;WAV (*.wav)"))
         if not path:
             return
         self._upload_bar.setValue(0)
@@ -1668,7 +1517,6 @@ class Go2ControlTab(QWidget):
     def _on_upload_done(self, robot_id: str, ok: bool, msg: str):
         self._upload_bar.setVisible(False)
         self._music_upload_btn.setEnabled(True)
-        self._stream_play_btn.setEnabled(True)
         if ok:
             self._refresh_audio_list()
 
@@ -1691,23 +1539,23 @@ class G1ControlTab(QWidget):
         root.setContentsMargins(4, 4, 4, 4)
         root.setSpacing(8)
 
-        arm_group = QGroupBox("手臂动作")
+        arm_group = QGroupBox(tr("手臂动作"))
         arm_grid  = QGridLayout(arm_group)
         arm_grid.setSpacing(5)
         arm_grid.setContentsMargins(4, 8, 4, 4)
         for idx, (data, label) in enumerate(G1_ARM_ACTIONS):
             btn = ActionButton(
-                label,
+                tr(label),
                 lambda d=data: self._mgr.send_g1_arm_action(self._robot_ids, d),
                 log_label=label, manager=self._mgr)
             arm_grid.addWidget(btn, idx // 4, idx % 4)
         root.addWidget(arm_group)
 
-        mode_group = QGroupBox("运动模式")
+        mode_group = QGroupBox(tr("运动模式"))
         mode_row   = QHBoxLayout(mode_group)
         mode_row.setSpacing(8)
         for code, label in G1_MOVE_MODES:
-            btn = QPushButton(label)
+            btn = QPushButton(tr(label))
             btn.setStyleSheet(_PRIMARY_BTN)
             btn.clicked.connect(
                 lambda checked, c=code, lbl=label: (
@@ -1744,13 +1592,13 @@ class LogPanel(QWidget):
         self._toggle_btn.setStyleSheet("border:none; color:#89b4fa;")
         self._toggle_btn.clicked.connect(self._toggle)
 
-        bar_lbl = QLabel("日志")
+        bar_lbl = QLabel(tr("日志"))
         bar_lbl.setStyleSheet("color:#89b4fa; font-size:12px;")
 
         self._log_path_lbl = QLabel("")
         self._log_path_lbl.setStyleSheet("color:#45475a; font-size:10px;")
 
-        self._clear_btn = QPushButton("清空")
+        self._clear_btn = QPushButton(tr("清空"))
         self._clear_btn.setStyleSheet(
             "QPushButton{background:transparent;color:#585b70;border:none;font-size:11px;}"
             "QPushButton:hover{color:#a6adc8;}")
@@ -1839,12 +1687,12 @@ class ControlPanel(QWidget):
             "background:#181825; border-bottom:1px solid #313244;")
         h_row = QHBoxLayout(self._header)
         h_row.setContentsMargins(12, 0, 12, 0)
-        self._header_lbl = QLabel("请在左侧选择机器人")
+        self._header_lbl = QLabel(tr("请在左侧选择机器人"))
         self._header_lbl.setStyleSheet("color:#a6adc8; font-size:13px;")
         h_row.addWidget(self._header_lbl)
         h_row.addStretch()
 
-        self._reconnect_btn = QPushButton("↺ 重连")
+        self._reconnect_btn = QPushButton(tr("↺ 重连"))
         self._reconnect_btn.setStyleSheet(_PRIMARY_BTN)
         self._reconnect_btn.setVisible(False)
         self._reconnect_btn.clicked.connect(self._on_reconnect)
@@ -1858,9 +1706,9 @@ class ControlPanel(QWidget):
         empty = QWidget()
         ev    = QVBoxLayout(empty)
         ev.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        el = QLabel("← 在左侧选择机器人\n"
-                    "单选：显示该机器人全部控制\n"
-                    "多选（Ctrl/Shift）：显示通用移动控制")
+        el = QLabel(tr("← 在左侧选择机器人\n"
+                       "单选：显示该机器人全部控制\n"
+                       "多选（Ctrl/Shift）：显示通用移动控制"))
         el.setAlignment(Qt.AlignmentFlag.AlignCenter)
         el.setStyleSheet("color:#45475a; font-size:13px; line-height:1.8;")
         ev.addWidget(el)
@@ -1893,7 +1741,7 @@ class ControlPanel(QWidget):
         v.setContentsMargins(6, 6, 6, 6)
         v.setSpacing(6)
 
-        move_group = QGroupBox("移动控制 (W/S/A/D + Q/E 旋转 | Z/X 侧走 | Space 停止)")
+        move_group = QGroupBox(tr("移动控制 (W/S/A/D + Q/E 旋转 | Z/X 侧走 | Space 停止)"))
         mg_v       = QVBoxLayout(move_group)
         mg_v.setContentsMargins(4, 8, 4, 4)
         panel = self._make_movement_panel(robot_type)
@@ -1917,12 +1765,12 @@ class ControlPanel(QWidget):
         v.setContentsMargins(6, 6, 6, 6)
         v.setSpacing(6)
 
-        note = QLabel("ℹ️  同时选中了 Go2 和 G1 机器人 — 混合模式下仅显示移动控制")
+        note = QLabel(tr("ℹ️  同时选中了 Go2 和 G1 机器人 — 混合模式下仅显示移动控制"))
         note.setStyleSheet("color:#fab387; font-size:12px;")
         note.setAlignment(Qt.AlignmentFlag.AlignCenter)
         v.addWidget(note)
 
-        move_group = QGroupBox("移动控制（全部选中的机器人）")
+        move_group = QGroupBox(tr("移动控制（全部选中的机器人）"))
         mg_v       = QVBoxLayout(move_group)
         mg_v.setContentsMargins(4, 8, 4, 4)
         panel = self._make_movement_panel("mixed")
@@ -1947,7 +1795,7 @@ class ControlPanel(QWidget):
 
         if not robot_ids:
             self._stack.setCurrentIndex(0)
-            self._header_lbl.setText("请在左侧选择机器人")
+            self._header_lbl.setText(tr("请在左侧选择机器人"))
             self._reconnect_btn.setVisible(False)
             self._joystick_timer.stop()
             return
@@ -1957,7 +1805,7 @@ class ControlPanel(QWidget):
         types  = {r.robot_type for r in robots}
         names  = "、".join(r.name for r in robots[:3])
         if len(robots) > 3:
-            names += f" 等 {len(robots)} 台"
+            names += tr(" 等 {n} 台", n=len(robots))
         self._header_lbl.setText(names)
 
         any_bad = any(r.status in (STATUS_ERROR, STATUS_DISCONNECTED)
@@ -2012,16 +1860,34 @@ class ControlPanel(QWidget):
                                     self._lx, self._ly, self._rx, self._ry)
 
     def _on_emergency_stop(self):
-        """摇杆面板的紧急停止按钮按下 → 立即调后端。"""
+        """摇杆面板的紧急停止按钮按下 → 立即调后端。
+
+        Go2 部分安全，立即执行；G1 急停是切阻尼，走跑中被打断会直接摔倒，风险和
+        Go2 不是一个量级，弹二次确认，用户确认后才对 G1 发。
+        """
         self._lx = self._ly = self._rx = self._ry = 0.0
         self._zero_send_count = 0
         connected = [rid for rid in self._robot_ids
                      if self._mgr.get_robot(rid) and
                      self._mgr.get_robot(rid).status == STATUS_CONNECTED]
-        if connected:
-            self._mgr.log_user_action("🚨 紧急停止",
-                                      f"目标={connected}")
-            self._mgr.emergency_stop_robots(connected)
+        if not connected:
+            return
+
+        self._mgr.log_user_action("🚨 紧急停止", f"目标={connected}")
+        self._mgr.emergency_stop_go2(connected)
+
+        g1_ids = self._mgr.g1_ids_among(connected)
+        if g1_ids:
+            g1_names = [r.name for rid in g1_ids if (r := self._mgr.get_robot(rid))]
+            ret = QMessageBox.warning(
+                self, tr("⚠️ 确认对 G1 急停？"),
+                tr("G1 急停会立即切阻尼、腿部瞬间卸力——如果这时候正在走跑，会直接摔倒。\n"
+                   "这个场景没有实测验证过安全性，确定要继续吗？\n\n"
+                   "目标：{names}", names="、".join(g1_names)),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+            if ret == QMessageBox.StandardButton.Yes:
+                self._mgr.log_user_action("🚨 G1 急停确认", f"目标={g1_ids}")
+                self._mgr.emergency_stop_g1(g1_ids)
 
     # ── 状态 ──
 
@@ -2055,7 +1921,7 @@ class ControlPanel(QWidget):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Unitree 多机器人控制台")
+        self.setWindowTitle(tr("Unitree 多机器人控制台"))
         self.resize(1200, 760)
         self.setMinimumSize(880, 580)
         self.setStyleSheet(APP_STYLE)
@@ -2118,8 +1984,8 @@ class MainWindow(QMainWindow):
 
         # 状态栏
         sb = self.statusBar()
-        self._sb_robots_lbl = QLabel("机器人：0")
-        self._sb_conn_lbl   = QLabel("已连接：0")
+        self._sb_robots_lbl = QLabel(tr("机器人：{n}", n=0))
+        self._sb_conn_lbl   = QLabel(tr("已连接：{n}", n=0))
         self._sb_cmd_lbl    = QLabel("")
         sb.addWidget(self._sb_robots_lbl)
         sb.addWidget(QLabel("  |  "))
@@ -2142,14 +2008,14 @@ class MainWindow(QMainWindow):
         total  = len(robots)
         conn   = sum(1 for r in robots.values()
                      if r.status == STATUS_CONNECTED)
-        self._sb_robots_lbl.setText(f"机器人：{total}")
-        self._sb_conn_lbl.setText(f"已连接：{conn}")
+        self._sb_robots_lbl.setText(tr("机器人：{n}", n=total))
+        self._sb_conn_lbl.setText(tr("已连接：{n}", n=conn))
 
     def _on_command_result_sb(self, robot_id: str, ok: bool, msg: str):
         robot = self._manager.get_robot(robot_id)
         name  = robot.name if robot else robot_id
         if ok:
-            self._sb_cmd_lbl.setText(f"✓ {name} 指令成功")
+            self._sb_cmd_lbl.setText(tr("✓ {name} 指令成功", name=name))
         else:
             self._sb_cmd_lbl.setText(f"✗ {name}: {msg[:50]}")
         QTimer.singleShot(3000, lambda: self._sb_cmd_lbl.setText(""))
@@ -2161,7 +2027,7 @@ class MainWindow(QMainWindow):
             self._sb_cmd_lbl.setText(f"⚠ {name}: {msg[:50]}")
             QTimer.singleShot(6000, lambda: self._sb_cmd_lbl.setText(""))
         elif status == STATUS_CONNECTED:
-            self._sb_cmd_lbl.setText(f"✓ {name} 已连接")
+            self._sb_cmd_lbl.setText(tr("✓ {name} 已连接", name=name))
             QTimer.singleShot(3000, lambda: self._sb_cmd_lbl.setText(""))
 
     def changeEvent(self, event):

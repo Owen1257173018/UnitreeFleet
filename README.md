@@ -1,4 +1,6 @@
-# Unitree MultiRobot Control · 宇树多机器人控制台
+# Unitree Fleet · 宇树多机器人控制台
+
+**[中文](README.md)** · [English](README.en.md)
 
 一个用于**同时控制多台宇树机器人**（Go2 四足、G1 人形）的 PyQt6 桌面应用，通过 WebRTC datachannel 直连，支持 LAN 群控、动作编排和实时录制。
 
@@ -23,6 +25,7 @@
   - 支持并行追加多个编排文件
 - **实时录制**：抓取用户实时操作（动作、移动、模式切换），自动转成可重放的 `ChoreoScript`
 - **键盘 + 触屏**：`WASD` 前后转向、`Z/X` 侧移、`Space` 紧急停止；按钮全部触摸友好
+- **中英双语**：左侧顶部 `🌐 EN` 按钮一键切换，语言偏好持久化到配置
 
 ---
 
@@ -31,8 +34,8 @@
 ### 1. 安装 Python 依赖
 
 ```bash
-git clone https://github.com/Owen1257173018/Unitree_MultiRobotControl.git
-cd Unitree_MultiRobotControl
+git clone https://github.com/Owen1257173018/unitree-fleet.git
+cd unitree-fleet
 
 # 安装本地 WebRTC 库（已包含本地修改：EC 公钥兼容 + 中文 Windows headers 修复）
 pip install -e unitree_webrtc_connect-master/
@@ -101,47 +104,19 @@ MultiRobotApp.py  →  main_window.py  →  backend.py  →  unitree_webrtc_conn
 
 ---
 
-## 🛠 配置文件
-
-应用首次运行会在程序目录创建 `unitree_robots_config.json`，结构示意：
-
-```json
-{
-  "saved_configs": [
-    {
-      "name": "演出A组",
-      "robots": [
-        {"name": "狗A", "robot_type": "go2", "ip": "192.168.1.100",
-         "aes_128_key": "abc...32-hex...", "sn": "B42D..."}
-      ]
-    }
-  ],
-  "unitree_email": "you@example.com"
-}
-```
-
-> **注意**：密码绝不写入；只记忆邮箱用于下次登录预填。AES 密钥存储为明文，配置文件**不要分享**给他人。
-
----
 
 ## ⚠️ 已知限制
 
 - 新固件需要先用宇树官方 App 完成首次激活/绑定，账号 → 设备列表里能看到才能从云端拉密钥
 - 多播扫描仅识别 Go2（依赖宇树多播协议），G1 必须走 `+ IP 添加` 手动加
 - 多播扫描依赖路由器允许 UDP 多播 + 同子网；部分企业/酒店网络会被拦
-- WebRTC 视频流和雷达数据通道目前只做了基本订阅，没做完整可视化
-- 极少数情况下 Qt 的 `InternalMove` 拖拽会清掉自定义 widget，已通过 `RobotListPanel._on_order_changed()` 兜底重绑
+
 
 ---
 
 ## 🤝 致谢
 
-- 上游 WebRTC 库：**[unitree_webrtc_connect](https://github.com/legion1581/unitree_webrtc_connect)** by Konstantin Severov（MIT License）— 本仓库内含其本地分叉，包含以下本地修改：
-  - `encryption.py` 加入 EC 公钥兼容路径
-  - `unitree_cloud.py` 修复中文 Windows 上 `time.strftime("%Z")` 触发 latin-1 header 编码错误的 bug
-  - 引入结构化异常 + AES-128 密钥流（本地与上游同步）
-- 界面配色采用 [Catppuccin Mocha](https://github.com/catppuccin/catppuccin) 主题
-- Unitree 机器人官方文档与 SDK
+- 上游 WebRTC 库：**[unitree_webrtc_connect](https://github.com/legion1581/unitree_webrtc_connect)** by Konstantin Severov（MIT License）
 
 ---
 

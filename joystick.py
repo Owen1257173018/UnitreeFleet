@@ -20,6 +20,8 @@ from typing import Callable, Optional, Set
 
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QObject, QEvent
 from PyQt6.QtGui import QColor, QFont, QKeyEvent
+
+from i18n import tr
 from PyQt6.QtWidgets import (
     QGridLayout, QHBoxLayout, QLabel, QPushButton,
     QSizePolicy, QSlider, QVBoxLayout, QWidget, QFrame
@@ -137,7 +139,7 @@ class MovementButtonPanel(QWidget):
 
         # ── 速度滑块 ──
         speed_row = QHBoxLayout()
-        speed_lbl = QLabel("速度：")
+        speed_lbl = QLabel(tr("速度："))
         speed_lbl.setStyleSheet("color:#a6adc8; font-size:12px;")
         speed_lbl.setFixedWidth(36)
         self._speed_slider = QSlider(Qt.Orientation.Horizontal)
@@ -154,7 +156,7 @@ class MovementButtonPanel(QWidget):
         speed_row.addWidget(self._speed_val_lbl)
         speed_row.addStretch()
 
-        hint = QLabel("  W/S = 前后  |  A/D/Q/E = 左右转  |  Z/X = 左右走  |  Space = 停止")
+        hint = QLabel(tr("  W/S = 前后  |  A/D/Q/E = 左右转  |  Z/X = 左右走  |  Space = 停止"))
         hint.setStyleSheet("color:#585b70; font-size:11px;")
         speed_row.addWidget(hint)
         root.addLayout(speed_row)
@@ -169,11 +171,11 @@ class MovementButtonPanel(QWidget):
 
         self._btn_fwd          = _make_dir_btn("▲",  "W / ↑", _FWD_COLOR)
         self._btn_back         = _make_dir_btn("▼",  "S / ↓", _BACK_COLOR)
-        self._btn_stop         = QPushButton("⬛\n停止\nSpace")
-        self._btn_turn_left    = _make_dir_btn("↺",  "A / ← 左转", _TURN_COLOR, 14)
-        self._btn_turn_right   = _make_dir_btn("↻",  "D / → 右转", _TURN_COLOR, 14)
-        self._btn_strafe_left  = _make_dir_btn("◀",  "Z 左移",    _SIDE_COLOR, 14)
-        self._btn_strafe_right = _make_dir_btn("▶",  "X 右移",    _SIDE_COLOR, 14)
+        self._btn_stop         = QPushButton(tr("⬛\n停止\nSpace"))
+        self._btn_turn_left    = _make_dir_btn("↺",  tr("A / ← 左转"), _TURN_COLOR, 14)
+        self._btn_turn_right   = _make_dir_btn("↻",  tr("D / → 右转"), _TURN_COLOR, 14)
+        self._btn_strafe_left  = _make_dir_btn("◀",  tr("Z 左移"),     _SIDE_COLOR, 14)
+        self._btn_strafe_right = _make_dir_btn("▶",  tr("X 右移"),     _SIDE_COLOR, 14)
 
         self._btn_stop.setStyleSheet(_STOP_IDLE)
         self._btn_stop.setMinimumSize(72, 64)

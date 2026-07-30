@@ -24,6 +24,7 @@ from backend import (
     ConfigManager, RobotManager,
     ROBOT_TYPE_GO2, ROBOT_TYPE_G1,
 )
+from i18n import tr
 
 import logging
 import threading
@@ -123,7 +124,7 @@ class AddByIPDialog(QDialog):
 
     def __init__(self, config: Optional[ConfigManager] = None, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("手动添加机器人")
+        self.setWindowTitle(tr("手动添加机器人"))
         self.setStyleSheet(_DIALOG_STYLE)
         self.setMinimumWidth(440)
         self.result: Optional[dict] = None
@@ -136,45 +137,45 @@ class AddByIPDialog(QDialog):
         root.setContentsMargins(16, 16, 16, 16)
 
         # ── 基本信息 ──
-        form_group = QGroupBox("设备信息")
+        form_group = QGroupBox(tr("设备信息"))
         form = QFormLayout(form_group)
         form.setSpacing(8)
 
         self._name_edit = QLineEdit()
-        self._name_edit.setPlaceholderText("例：机器狗A  /  G1铁柱")
-        form.addRow("名称：", self._name_edit)
+        self._name_edit.setPlaceholderText(tr("例：机器狗A  /  G1铁柱"))
+        form.addRow(tr("名称："), self._name_edit)
 
         self._ip_edit = QLineEdit()
-        self._ip_edit.setPlaceholderText("例：192.168.88.10")
-        form.addRow("IP 地址：", self._ip_edit)
+        self._ip_edit.setPlaceholderText(tr("例：192.168.88.10"))
+        form.addRow(tr("IP 地址："), self._ip_edit)
 
         self._sn_edit = QLineEdit()
-        self._sn_edit.setPlaceholderText("选填，新固件拉取 AES 密钥时必需")
-        form.addRow("SN：", self._sn_edit)
+        self._sn_edit.setPlaceholderText(tr("选填，新固件拉取 AES 密钥时必需"))
+        form.addRow(tr("SN："), self._sn_edit)
 
         self._token_edit = QLineEdit()
-        self._token_edit.setPlaceholderText("选填（LocalSTA 通常不需要）")
+        self._token_edit.setPlaceholderText(tr("选填（LocalSTA 通常不需要）"))
         self._token_edit.setEchoMode(QLineEdit.EchoMode.Password)
-        form.addRow("Token：", self._token_edit)
+        form.addRow(tr("Token："), self._token_edit)
 
         # AES 密钥行 + 从云端获取按钮
         aes_row = QHBoxLayout()
         aes_row.setSpacing(6)
         self._aes_edit = QLineEdit()
-        self._aes_edit.setPlaceholderText("32 位 16 进制（仅新固件需要，留空=老固件）")
+        self._aes_edit.setPlaceholderText(tr("32 位 16 进制（仅新固件需要，留空=老固件）"))
         aes_row.addWidget(self._aes_edit, 1)
-        self._aes_fetch_btn = QPushButton("☁ 从云端获取")
+        self._aes_fetch_btn = QPushButton(tr("☁ 从云端获取"))
         self._aes_fetch_btn.clicked.connect(self._on_fetch_aes)
         aes_row.addWidget(self._aes_fetch_btn)
-        form.addRow("AES 密钥：", aes_row)
+        form.addRow(tr("AES 密钥："), aes_row)
 
         root.addWidget(form_group)
 
         # ── 机器人类型 ──
-        type_group = QGroupBox("机器人类型")
+        type_group = QGroupBox(tr("机器人类型"))
         type_row = QHBoxLayout(type_group)
-        self._go2_radio = QRadioButton("🐕  Go2 机器狗")
-        self._g1_radio  = QRadioButton("🤖  G1 人形机器人")
+        self._go2_radio = QRadioButton(tr("🐕  Go2 机器狗"))
+        self._g1_radio  = QRadioButton(tr("🤖  G1 人形机器人"))
         self._go2_radio.setChecked(True)
         type_row.addWidget(self._go2_radio)
         type_row.addWidget(self._g1_radio)
@@ -182,8 +183,8 @@ class AddByIPDialog(QDialog):
 
         # ── 确认 / 取消 ──
         btn_row = QHBoxLayout()
-        cancel = _make_button("取消")
-        ok     = _make_button("连接", primary=True)
+        cancel = _make_button(tr("取消"))
+        ok     = _make_button(tr("连接"), primary=True)
         cancel.clicked.connect(self.reject)
         ok.clicked.connect(self._on_ok)
         btn_row.addStretch()
@@ -192,16 +193,20 @@ class AddByIPDialog(QDialog):
         root.addLayout(btn_row)
 
     def _on_fetch_aes(self):
+        # 不再要求先在外层填好 SN / 选好类型：直接进云端对话框，里面独立填 SN + 选类型，
+        # 成功后把 AES 密钥、SN、类型一并回填到本对话框。
         sn = self._sn_edit.text().strip()
-        if not sn:
-            QMessageBox.information(self, "需要 SN",
-                "云端拉取需要 SN 序列号，请先填写。SN 可在机器人电池仓或机身贴纸找到。")
-            return
         robot_type = ROBOT_TYPE_GO2 if self._go2_radio.isChecked() else ROBOT_TYPE_G1
         dlg = UnitreeCloudLoginDialog(sn=sn, robot_type=robot_type,
                                       config=self._config, parent=self)
         if dlg.exec() and dlg.fetched_key:
             self._aes_edit.setText(dlg.fetched_key)
+            if dlg.fetched_sn:
+                self._sn_edit.setText(dlg.fetched_sn)
+            if dlg.fetched_type == ROBOT_TYPE_G1:
+                self._g1_radio.setChecked(True)
+            else:
+                self._go2_radio.setChecked(True)
 
     def _on_ok(self):
         name  = self._name_edit.text().strip()
@@ -211,10 +216,10 @@ class AddByIPDialog(QDialog):
         aes   = self._aes_edit.text().strip()
 
         if not name:
-            QMessageBox.warning(self, "缺少名称", "请输入机器人名称。")
+            QMessageBox.warning(self, tr("缺少名称"), tr("请输入机器人名称。"))
             return
         if not ip:
-            QMessageBox.warning(self, "缺少 IP", "请填写机器人的 IP 地址。")
+            QMessageBox.warning(self, tr("缺少 IP"), tr("请填写机器人的 IP 地址。"))
             return
 
         robot_type = ROBOT_TYPE_GO2 if self._go2_radio.isChecked() else ROBOT_TYPE_G1
@@ -238,7 +243,7 @@ class AutoAddDialog(QDialog):
 
     def __init__(self, config: ConfigManager, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("自动扫描添加")
+        self.setWindowTitle(tr("自动扫描添加"))
         self.setStyleSheet(_DIALOG_STYLE)
         self.setMinimumWidth(460)
         self.setMinimumHeight(520)
@@ -255,7 +260,7 @@ class AutoAddDialog(QDialog):
         root.setContentsMargins(16, 16, 16, 16)
 
         # ── SN 输入区 ──
-        sn_group = QGroupBox("目标 SN 列表（每行一个）")
+        sn_group = QGroupBox(tr("目标 SN 列表（每行一个）"))
         sn_layout = QVBoxLayout(sn_group)
 
         self._sn_text = QTextEdit()
@@ -266,16 +271,16 @@ class AutoAddDialog(QDialog):
         sn_layout.addWidget(self._sn_text)
 
         opts_row = QHBoxLayout()
-        self._save_cb = QCheckBox("保存此 SN 列表，下次自动填入")
+        self._save_cb = QCheckBox(tr("保存此 SN 列表，下次自动填入"))
         self._save_cb.setChecked(True)
         opts_row.addWidget(self._save_cb)
         opts_row.addStretch()
 
-        timeout_lbl = QLabel("超时：")
+        timeout_lbl = QLabel(tr("超时："))
         self._timeout_spin = QSpinBox()
         self._timeout_spin.setRange(2, 30)
         self._timeout_spin.setValue(3)
-        self._timeout_spin.setSuffix(" 秒")
+        self._timeout_spin.setSuffix(tr(" 秒"))
         self._timeout_spin.setFixedWidth(80)
         opts_row.addWidget(timeout_lbl)
         opts_row.addWidget(self._timeout_spin)
@@ -285,7 +290,7 @@ class AutoAddDialog(QDialog):
 
         # ── 扫描按钮 + 进度 ──
         scan_row = QHBoxLayout()
-        self._scan_btn = _make_button("📡  开始扫描", primary=True)
+        self._scan_btn = _make_button(tr("📡  开始扫描"), primary=True)
         self._scan_btn.clicked.connect(self._start_scan)
         scan_row.addStretch()
         scan_row.addWidget(self._scan_btn)
@@ -303,7 +308,7 @@ class AutoAddDialog(QDialog):
         root.addWidget(self._status_lbl)
 
         # ── 结果列表 ──
-        result_group = QGroupBox("扫描结果（勾选要添加的设备）")
+        result_group = QGroupBox(tr("扫描结果（勾选要添加的设备）"))
         result_v = QVBoxLayout(result_group)
 
         self._result_scroll = QScrollArea()
@@ -320,8 +325,8 @@ class AutoAddDialog(QDialog):
 
         # ── 底部按钮 ──
         btn_row = QHBoxLayout()
-        cancel = _make_button("关闭")
-        self._add_btn = _make_button("✅  添加选中设备", primary=True)
+        cancel = _make_button(tr("关闭"))
+        self._add_btn = _make_button(tr("✅  添加选中设备"), primary=True)
         self._add_btn.setEnabled(False)
         cancel.clicked.connect(self.reject)
         self._add_btn.clicked.connect(self._on_add)
@@ -343,9 +348,9 @@ class AutoAddDialog(QDialog):
         tout = float(self._timeout_spin.value())
 
         if not sns:
-            QMessageBox.information(self, "提示",
+            QMessageBox.information(self, tr("提示"), tr(
                 "请在上方输入至少一个序列号。\n"
-                "如果想扫描网络中所有设备，可不填 SN 直接扫描。")
+                "如果想扫描网络中所有设备，可不填 SN 直接扫描。"))
 
         # 保存 SN：完整替换，确保删掉的 SN 不会残留
         if save:
@@ -359,7 +364,7 @@ class AutoAddDialog(QDialog):
         self._scan_btn.setEnabled(not on)
         self._progress.setVisible(on)
         if on:
-            self._status_lbl.setText("扫描中…")
+            self._status_lbl.setText(tr("扫描中…"))
         else:
             pass
 
@@ -379,7 +384,7 @@ class AutoAddDialog(QDialog):
         self._clear_results()
 
         if not sn_to_ip:
-            self._status_lbl.setText("❌  未发现任何设备，请检查网络连接")
+            self._status_lbl.setText(tr("❌  未发现任何设备，请检查网络连接"))
             return
 
         # 目标列表与扫描结果的交集
@@ -392,8 +397,8 @@ class AutoAddDialog(QDialog):
 
         total = len(matched)
         self._status_lbl.setText(
-            f"✅  发现 {len(sn_to_ip)} 台设备，目标命中 {total} 台"
-            + (f"，{len(unmatched)} 台未在线" if unmatched else ""))
+            tr("✅  发现 {n} 台设备，目标命中 {hit} 台", n=len(sn_to_ip), hit=total)
+            + (tr("，{n} 台未在线", n=len(unmatched)) if unmatched else ""))
 
         for sn, ip in matched.items():
             self._add_result_row(sn, ip)
@@ -422,8 +427,8 @@ class AutoAddDialog(QDialog):
         from backend import RobotManager
         rtype = RobotManager.detect_type_from_sn(sn) or ROBOT_TYPE_GO2
         combo = QComboBox()
-        combo.addItem("🐕 Go2 机器狗",  ROBOT_TYPE_GO2)
-        combo.addItem("🤖 G1 人形机器人", ROBOT_TYPE_G1)
+        combo.addItem(tr("🐕 Go2 机器狗"),  ROBOT_TYPE_GO2)
+        combo.addItem(tr("🤖 G1 人形机器人"), ROBOT_TYPE_G1)
         combo.setCurrentIndex(0 if rtype == ROBOT_TYPE_GO2 else 1)
         combo.setEnabled(not offline)
         combo.setFixedWidth(130)
@@ -433,7 +438,7 @@ class AutoAddDialog(QDialog):
         sn_lbl.setStyleSheet("color:#a6adc8; font-size:11px;")
         row.addWidget(sn_lbl)
 
-        ip_lbl = QLabel(ip if ip else "离线")
+        ip_lbl = QLabel(ip if ip else tr("离线"))
         ip_lbl.setStyleSheet(
             "color:#a6e3a1;" if ip else "color:#f38ba8;")
         ip_lbl.setAlignment(Qt.AlignmentFlag.AlignRight)
@@ -441,7 +446,7 @@ class AutoAddDialog(QDialog):
 
         # 名称
         name_edit = QLineEdit()
-        name_edit.setPlaceholderText("设备名称")
+        name_edit.setPlaceholderText(tr("设备名称"))
         name_edit.setText(sn[-6:])   # 默认用 SN 后 6 位
         name_edit.setFixedWidth(90)
         name_edit.setEnabled(not offline)
@@ -458,7 +463,7 @@ class AutoAddDialog(QDialog):
         key_lbl.setFixedWidth(78)
         key_lbl.setStyleSheet("font-size:11px;")
         fetch_btn = QPushButton("☁")
-        fetch_btn.setToolTip("从宇树云端拉取此设备的 AES-128 密钥")
+        fetch_btn.setToolTip(tr("从宇树云端拉取此设备的 AES-128 密钥"))
         fetch_btn.setFixedWidth(28)
         fetch_btn.setEnabled(not offline)
 
@@ -469,10 +474,10 @@ class AutoAddDialog(QDialog):
 
         def _refresh_key_label():
             if row_state["aes_128_key"]:
-                key_lbl.setText("✓ 已有密钥")
+                key_lbl.setText(tr("✓ 已有密钥"))
                 key_lbl.setStyleSheet("color:#a6e3a1; font-size:11px;")
             else:
-                key_lbl.setText("⚠ 需获取")
+                key_lbl.setText(tr("⚠ 需获取"))
                 key_lbl.setStyleSheet("color:#f9e2af; font-size:11px;")
 
         def _on_fetch():
@@ -505,7 +510,7 @@ class AutoAddDialog(QDialog):
                     aes_128_key = row.get("aes_128_key", ""),
                 ))
         if not self._selected:
-            QMessageBox.information(self, "提示", "没有选中任何在线设备。")
+            QMessageBox.information(self, tr("提示"), tr("没有选中任何在线设备。"))
             return
         self.accept()
 
@@ -523,7 +528,7 @@ class AutoAddDialog(QDialog):
 class ConfirmDeleteDialog(QDialog):
     def __init__(self, names: List[str], parent=None):
         super().__init__(parent)
-        self.setWindowTitle("确认删除")
+        self.setWindowTitle(tr("确认删除"))
         self.setStyleSheet(_DIALOG_STYLE)
         self.setFixedWidth(300)
 
@@ -531,7 +536,7 @@ class ConfirmDeleteDialog(QDialog):
         root.setSpacing(12)
         root.setContentsMargins(16, 16, 16, 16)
 
-        msg = QLabel(f"确定要断开并删除以下 {len(names)} 台设备吗？")
+        msg = QLabel(tr("确定要断开并删除以下 {n} 台设备吗？", n=len(names)))
         msg.setWordWrap(True)
         root.addWidget(msg)
 
@@ -541,8 +546,8 @@ class ConfirmDeleteDialog(QDialog):
         root.addWidget(detail)
 
         btn_row = QHBoxLayout()
-        cancel = _make_button("取消")
-        ok     = _make_button("删除", primary=True)
+        cancel = _make_button(tr("取消"))
+        ok     = _make_button(tr("删除"), primary=True)
         ok.setStyleSheet(
             "QPushButton#primaryBtn { background:#f38ba8; color:#1e1e2e; }"
         )
@@ -569,13 +574,16 @@ class UnitreeCloudLoginDialog(QDialog):
     def __init__(self, sn: str, robot_type: str,
                  config: Optional[ConfigManager] = None, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("从宇树云端获取 AES 密钥")
+        self.setWindowTitle(tr("从宇树云端获取 AES 密钥"))
         self.setStyleSheet(_DIALOG_STYLE)
         self.setMinimumWidth(420)
         self._sn = sn
         self._robot_type = robot_type
         self._config = config
         self.fetched_key: str = ""
+        # SN 和设备类型现在都在本对话框里独立填/选，成功后一并回传给外层。
+        self.fetched_sn: str = ""
+        self.fetched_type: str = robot_type
         self._build_ui()
         self._result_ready.connect(self._on_fetch_result)
 
@@ -584,11 +592,10 @@ class UnitreeCloudLoginDialog(QDialog):
         root.setSpacing(12)
         root.setContentsMargins(16, 16, 16, 16)
 
-        info = QLabel(
-            f"目标机器人 SN：<b>{self._sn}</b><br>"
-            "需要用您的 <b>宇树官方账号</b> 登录，仅用于一次性拉取该设备的<br>"
-            "AES-128 密钥（持久化在本地配置，密码不会保存）。"
-        )
+        info = QLabel(tr(
+            "在这里直接填 <b>SN</b> 和选 <b>设备类型</b>，再用您的 <b>宇树官方账号</b> 登录，<br>"
+            "一次性拉取该设备的 AES-128 密钥（持久化在本地配置，密码不会保存）。"
+        ))
         info.setStyleSheet("color:#a6adc8; font-size:12px;")
         info.setWordWrap(True)
         root.addWidget(info)
@@ -597,27 +604,34 @@ class UnitreeCloudLoginDialog(QDialog):
         form = QFormLayout()
         form.setSpacing(8)
 
+        # SN 独立输入（不再依赖外层先填好）
+        self._sn_edit = QLineEdit()
+        self._sn_edit.setText(self._sn or "")
+        self._sn_edit.setPlaceholderText(tr("机器人电池仓/机身贴纸上的序列号"))
+        form.addRow(tr("SN："), self._sn_edit)
+
         self._email_edit = QLineEdit()
         self._email_edit.setPlaceholderText("you@example.com")
         if self._config:
             self._email_edit.setText(self._config.get_unitree_email() or "")
-        form.addRow("邮箱：", self._email_edit)
+        form.addRow(tr("邮箱："), self._email_edit)
 
         self._pwd_edit = QLineEdit()
         self._pwd_edit.setEchoMode(QLineEdit.EchoMode.Password)
-        self._pwd_edit.setPlaceholderText("不会保存到本地")
-        form.addRow("密码：", self._pwd_edit)
+        self._pwd_edit.setPlaceholderText(tr("不会保存到本地"))
+        form.addRow(tr("密码："), self._pwd_edit)
 
         self._region_combo = QComboBox()
-        self._region_combo.addItem("global（国际）", "global")
-        self._region_combo.addItem("cn（中国）", "cn")
-        form.addRow("区域：", self._region_combo)
+        self._region_combo.addItem(tr("cn（中国）"), "cn")
+        self._region_combo.addItem(tr("global（国际）"), "global")
+        self._region_combo.setCurrentIndex(0)   # 默认国内
+        form.addRow(tr("区域："), self._region_combo)
 
         self._dtype_combo = QComboBox()
         self._dtype_combo.addItem("Go2", "Go2")
         self._dtype_combo.addItem("G1", "G1")
         self._dtype_combo.setCurrentIndex(0 if self._robot_type == ROBOT_TYPE_GO2 else 1)
-        form.addRow("设备类型：", self._dtype_combo)
+        form.addRow(tr("设备类型："), self._dtype_combo)
 
         root.addLayout(form)
 
@@ -630,8 +644,8 @@ class UnitreeCloudLoginDialog(QDialog):
 
         # ── 按钮 ──
         btn_row = QHBoxLayout()
-        cancel = _make_button("取消")
-        self._fetch_btn = _make_button("获取密钥", primary=True)
+        cancel = _make_button(tr("取消"))
+        self._fetch_btn = _make_button(tr("获取密钥"), primary=True)
         cancel.clicked.connect(self.reject)
         self._fetch_btn.clicked.connect(self._on_fetch)
         btn_row.addStretch()
@@ -640,28 +654,37 @@ class UnitreeCloudLoginDialog(QDialog):
         root.addLayout(btn_row)
 
     def _on_fetch(self):
+        sn    = self._sn_edit.text().strip()
         email = self._email_edit.text().strip()
         pwd   = self._pwd_edit.text()
+        if not sn:
+            self._status_lbl.setText(tr("⚠ 请填写 SN 序列号"))
+            self._status_lbl.setStyleSheet("color:#f9e2af; font-size:12px;")
+            return
         if not email:
-            self._status_lbl.setText("⚠ 请填写邮箱")
+            self._status_lbl.setText(tr("⚠ 请填写邮箱"))
             self._status_lbl.setStyleSheet("color:#f9e2af; font-size:12px;")
             return
         if not pwd:
-            self._status_lbl.setText("⚠ 请填写密码")
+            self._status_lbl.setText(tr("⚠ 请填写密码"))
             self._status_lbl.setStyleSheet("color:#f9e2af; font-size:12px;")
             return
 
         region = self._region_combo.currentData()
         dtype  = self._dtype_combo.currentData()
+        # 记下这次用的 SN / 类型，成功后回传给外层对话框自动回填。
+        self._sn = sn
+        self.fetched_sn = sn
+        self.fetched_type = ROBOT_TYPE_GO2 if dtype == "Go2" else ROBOT_TYPE_G1
 
         self._fetch_btn.setEnabled(False)
-        self._fetch_btn.setText("获取中…")
-        self._status_lbl.setText("⏳ 正在连接宇树云端，请稍候…")
+        self._fetch_btn.setText(tr("获取中…"))
+        self._status_lbl.setText(tr("⏳ 正在连接宇树云端，请稍候…"))
         self._status_lbl.setStyleSheet("color:#89b4fa; font-size:12px;")
 
         threading.Thread(
             target=self._do_fetch_in_thread,
-            args=(email, pwd, self._sn, region, dtype),
+            args=(email, pwd, sn, region, dtype),
             daemon=True, name="UnitreeCloudFetch"
         ).start()
 
@@ -670,13 +693,15 @@ class UnitreeCloudLoginDialog(QDialog):
         try:
             from unitree_webrtc_connect import fetch_aes_key
         except ImportError as e:
-            self._result_ready.emit(False, f"库不支持此功能（请确认已升级到新版）：{e}")
+            self._result_ready.emit(
+                False, tr("库不支持此功能（请确认已升级到新版）：{err}", err=e))
             return
         try:
             key = fetch_aes_key(email, password, sn,
                                 region=region, device_type=device_type)
             if not key:
-                self._result_ready.emit(False, "云端未返回密钥（SN 可能未绑定到此账号）")
+                self._result_ready.emit(
+                    False, tr("云端未返回密钥（SN 可能未绑定到此账号）"))
                 return
             # 成功：记住邮箱（密码绝不持久化）
             if self._config:
@@ -688,13 +713,13 @@ class UnitreeCloudLoginDialog(QDialog):
 
     def _on_fetch_result(self, ok: bool, payload: str):
         self._fetch_btn.setEnabled(True)
-        self._fetch_btn.setText("获取密钥")
+        self._fetch_btn.setText(tr("获取密钥"))
         if ok:
             self.fetched_key = payload
-            self._status_lbl.setText(f"✅ 获取成功：{payload}")
+            self._status_lbl.setText(tr("✅ 获取成功：{key}", key=payload))
             self._status_lbl.setStyleSheet("color:#a6e3a1; font-size:12px;")
             # 让用户看清楚再关闭
             QTimer.singleShot(600, self.accept)
         else:
-            self._status_lbl.setText(f"❌ {payload}")
+            self._status_lbl.setText(tr("❌ {msg}", msg=payload))
             self._status_lbl.setStyleSheet("color:#f38ba8; font-size:12px;")

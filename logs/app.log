@@ -4536,3 +4536,76 @@ TypeError: cannot unpack non-iterable int object
 2026-07-16 10:56:59  DEBUG     [root]  Track video ended
 2026-07-16 10:56:59  DEBUG     [root]  Track audio ended
 2026-07-16 10:56:59  INFO      [root]  Data channel closed
+2026-07-28 00:49:30  INFO      [unitree.backend]  ============================================================
+2026-07-28 00:49:30  INFO      [unitree.backend]  Unitree 多机器人控制台 启动  log→/Users/ouyanywenjie/Documents/MultiRobot/logs/app.log
+2026-07-28 00:49:30  INFO      [unitree.backend]  ============================================================
+2026-07-28 00:49:31  INFO      [unitree.app]  Qt 应用启动  Python=3.10.20 (main, Mar 11 2026, 17:43:48) [Clang 20.1.8 ]  Platform=darwin
+2026-07-28 00:49:31  INFO      [unitree.backend]  加载配置成功，saved_robots=0
+2026-07-28 00:49:31  INFO      [unitree.backend]  ConfigManager 初始化，配置文件：/Users/ouyanywenjie/.unitree_multicontrol/config.json
+2026-07-28 00:49:31  INFO      [unitree.ui]  主窗口初始化完成，日志文件：/Users/ouyanywenjie/Documents/MultiRobot/logs/app.log
+2026-07-28 00:49:31  INFO      [unitree.app]  主窗口已显示
+2026-07-28 23:53:32  INFO      [unitree.ui]  应用关闭，断开所有连接
+2026-07-28 23:53:32  INFO      [unitree.backend]  RobotManager 关闭，断开所有连接…
+2026-07-28 23:53:32  INFO      [unitree.app]  应用退出，code=0
+2026-07-29 18:06:52  INFO      [unitree.backend]  ============================================================
+2026-07-29 18:06:52  INFO      [unitree.backend]  Unitree 多机器人控制台 启动  log→/Users/ouyanywenjie/Documents/MultiRobot/logs/app.log
+2026-07-29 18:06:52  INFO      [unitree.backend]  ============================================================
+2026-07-29 18:06:53  INFO      [unitree.app]  Qt 应用启动  Python=3.10.20 (main, Mar 11 2026, 17:43:48) [Clang 20.1.8 ]  Platform=darwin
+2026-07-29 18:06:53  INFO      [unitree.backend]  加载配置成功，saved_robots=0
+2026-07-29 18:06:53  INFO      [unitree.backend]  ConfigManager 初始化，配置文件：/Users/ouyanywenjie/.unitree_multicontrol/config.json
+2026-07-29 18:06:53  INFO      [unitree.ui]  主窗口初始化完成，日志文件：/Users/ouyanywenjie/Documents/MultiRobot/logs/app.log
+2026-07-29 18:06:53  INFO      [unitree.app]  主窗口已显示
+2026-07-29 18:06:55  INFO      [unitree.ui]  [用户操作] 打开编排编辑器
+2026-07-29 18:07:01  INFO      [unitree.choreo]  手动添加轨道：#1 Go2
+2026-07-29 18:07:02  INFO      [unitree.choreo]  手动添加轨道：#2 Go2
+2026-07-29 18:07:02  INFO      [unitree.choreo]  手动添加轨道：#3 Go2
+2026-07-29 18:07:02  INFO      [unitree.choreo]  手动添加轨道：#4 Go2
+2026-07-29 18:07:02  INFO      [unitree.choreo]  手动添加轨道：#5 Go2
+2026-07-29 18:07:02  INFO      [unitree.choreo]  手动添加轨道：#6 Go2
+2026-07-29 18:07:03  INFO      [unitree.choreo]  手动添加轨道：#7 Go2
+2026-07-29 18:07:03  INFO      [unitree.choreo]  手动添加轨道：#8 Go2
+2026-07-29 18:07:03  INFO      [unitree.choreo]  手动添加轨道：#9 Go2
+2026-07-29 18:07:03  INFO      [unitree.choreo]  手动添加轨道：#10 Go2
+2026-07-29 18:07:05  INFO      [unitree.choreo]  删除轨道：#10 Go2
+2026-07-29 18:07:06  INFO      [unitree.choreo]  删除轨道：#5 Go2
+2026-07-29 18:07:07  INFO      [unitree.choreo]  删除轨道：#3 Go2
+2026-07-29 18:07:10  INFO      [unitree.choreo]  删除轨道：#1 Go2
+2026-07-29 18:07:11  INFO      [unitree.choreo]  删除轨道：#1 Go2
+2026-07-29 18:07:11  INFO      [unitree.choreo]  删除轨道：#1 Go2
+2026-07-29 18:07:12  INFO      [unitree.choreo]  删除轨道：#1 Go2
+2026-07-29 18:07:12  INFO      [unitree.choreo]  删除轨道：#1 Go2
+2026-07-29 18:07:12  INFO      [unitree.choreo]  删除轨道：#1 Go2
+2026-07-29 18:07:13  INFO      [unitree.choreo]  删除轨道：#1 Go2
+2026-07-29 18:07:44  INFO      [unitree.ui]  [用户操作] 点击 IP 手动添加
+2026-07-29 18:11:49  INFO      [unitree.ui]  [用户操作] 点击 IP 手动添加
+2026-07-29 18:16:26  INFO      [unitree.ui]  应用关闭，断开所有连接
+2026-07-29 18:16:26  INFO      [unitree.backend]  RobotManager 关闭，断开所有连接…
+2026-07-29 18:16:26  INFO      [unitree.app]  应用退出，code=0
+2026-07-30 09:32:34  INFO      [unitree.backend]  ============================================================
+2026-07-30 09:32:34  INFO      [unitree.backend]  Unitree 多机器人控制台 启动  log→/Users/ouyanywenjie/Documents/MultiRobot/logs/app.log
+2026-07-30 09:32:34  INFO      [unitree.backend]  ============================================================
+2026-07-30 09:32:34  INFO      [unitree.backend]  加载配置成功，saved_robots=0
+2026-07-30 09:32:34  INFO      [unitree.backend]  ConfigManager 初始化，配置文件：/Users/ouyanywenjie/.unitree_multicontrol/config.json
+2026-07-30 09:32:34  INFO      [unitree.app]  Qt 应用启动  Python=3.10.20 (main, Mar 11 2026, 17:43:48) [Clang 20.1.8 ]  Platform=darwin
+2026-07-30 09:32:34  INFO      [unitree.backend]  加载配置成功，saved_robots=0
+2026-07-30 09:32:34  INFO      [unitree.backend]  ConfigManager 初始化，配置文件：/Users/ouyanywenjie/.unitree_multicontrol/config.json
+2026-07-30 09:32:35  INFO      [unitree.ui]  主窗口初始化完成，日志文件：/Users/ouyanywenjie/Documents/MultiRobot/logs/app.log
+2026-07-30 09:32:35  INFO      [unitree.app]  主窗口已显示
+2026-07-30 09:32:37  DEBUG     [unitree.backend]  配置已写入 /Users/ouyanywenjie/.unitree_multicontrol/config.json
+2026-07-30 09:32:41  DEBUG     [unitree.backend]  配置已写入 /Users/ouyanywenjie/.unitree_multicontrol/config.json
+2026-07-30 09:32:41  INFO      [unitree.ui]  应用关闭，断开所有连接
+2026-07-30 09:32:41  INFO      [unitree.backend]  RobotManager 关闭，断开所有连接…
+2026-07-30 09:32:41  INFO      [unitree.app]  应用退出，code=0
+2026-07-30 09:32:48  INFO      [unitree.backend]  ============================================================
+2026-07-30 09:32:48  INFO      [unitree.backend]  Unitree 多机器人控制台 启动  log→/Users/ouyanywenjie/Documents/MultiRobot/logs/app.log
+2026-07-30 09:32:48  INFO      [unitree.backend]  ============================================================
+2026-07-30 09:32:48  INFO      [unitree.backend]  加载配置成功，saved_robots=0
+2026-07-30 09:32:48  INFO      [unitree.backend]  ConfigManager 初始化，配置文件：/Users/ouyanywenjie/.unitree_multicontrol/config.json
+2026-07-30 09:32:48  INFO      [unitree.app]  Qt 应用启动  Python=3.10.20 (main, Mar 11 2026, 17:43:48) [Clang 20.1.8 ]  Platform=darwin
+2026-07-30 09:32:48  INFO      [unitree.backend]  加载配置成功，saved_robots=0
+2026-07-30 09:32:48  INFO      [unitree.backend]  ConfigManager 初始化，配置文件：/Users/ouyanywenjie/.unitree_multicontrol/config.json
+2026-07-30 09:32:48  INFO      [unitree.ui]  主窗口初始化完成，日志文件：/Users/ouyanywenjie/Documents/MultiRobot/logs/app.log
+2026-07-30 09:32:48  INFO      [unitree.app]  主窗口已显示
+2026-07-30 09:33:00  INFO      [unitree.ui]  应用关闭，断开所有连接
+2026-07-30 09:33:00  INFO      [unitree.backend]  RobotManager 关闭，断开所有连接…
+2026-07-30 09:33:00  INFO      [unitree.app]  应用退出，code=0
